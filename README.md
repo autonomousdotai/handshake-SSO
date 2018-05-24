@@ -8,10 +8,22 @@ https://golang.org/doc/install
 # Setup
 go get github.com/autonomousdotai/handshake-dispatcher
 
+cd /path/to/handshake-dispatcher
+
 glide install
 
+# Configure
+`cd /path/to/handshake-dispatcher`
+`cp config/conf.yaml.default config/conf.yaml`
+
+Edit `config/conf.yaml` to fix your config
+
 # Migrate db
-go run migrate.go
+create database if not exists
+
+`CREATE DATABASE database CHARACTER SET utf8 COLLATE utf8_general_ci;`
+
+`go run migrate.go`
 
 # Run server
-go run main.go
+`go run main.go`
