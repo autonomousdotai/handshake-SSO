@@ -9,12 +9,14 @@ https://golang.org/doc/install
 ```bash
 go get github.com/autonomousdotai/handshake-dispatcher
 cd /path/to/handshake-dispatcher
-glide install```
+glide install
+```
 
 # Configure
 ```bash
 cd /path/to/handshake-dispatcher
-cp config/conf.yaml.default config/conf.yaml```
+cp config/conf.yaml.default config/conf.yaml
+```
 
 Edit `config/conf.yaml` to fix your config
 
@@ -24,8 +26,10 @@ Mysql. create database if not exists
 `CREATE DATABASE database CHARACTER SET utf8 COLLATE utf8_general_ci;`
 
 ```bash
-go run migrate.go````
+go run migrate.go
+```
 
 # Run server
 ```bash
-go run main.go```
+go run main.go
+```
