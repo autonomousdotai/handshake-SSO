@@ -1,0 +1,5 @@
+# ignore config
+config/*.yaml
+
+vecdor
+glide.lock
