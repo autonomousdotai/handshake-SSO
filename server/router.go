@@ -20,6 +20,7 @@ func NewRouter() *gin.Engine {
     router := gin.Default()
     router.Use(gin.Logger())
     router.Use(gin.Recovery())
+    router.Use(middlewares.CORSMiddleware())
 
     router.GET("/", func(c *gin.Context) {
         c.JSON(http.StatusOK, gin.H{"status": 1, "message": "Handshake REST API"})
