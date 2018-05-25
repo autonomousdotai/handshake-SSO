@@ -4,7 +4,6 @@ import (
     "fmt"
     "strings"
     "net/http"
-    "strconv"
 
     "github.com/gin-gonic/gin"
     "github.com/autonomousdotai/handshake-dispatcher/config"
@@ -31,7 +30,8 @@ func AuthMiddleware() gin.HandlerFunc {
        
         if err != nil {
             c.JSON(http.StatusOK, gin.H{"status": 0, "message": "Invalid user!"})
-            return
+            c.Abort()
+            return;
         }
 
         fmt.Println(p, uuid)
@@ -46,7 +46,6 @@ func AuthMiddleware() gin.HandlerFunc {
         }
         
         c.Set("User", user)
-        c.Writer.Header().Set("UID", strconv.FormatUint(uint64(user.ID), 10))
         c.Next()
     }
 }

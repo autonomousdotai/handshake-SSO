@@ -7,11 +7,13 @@ import (
     "net/url"
     "time"
     "log"
+    "strconv"
     "github.com/gin-gonic/gin"
 
     "github.com/autonomousdotai/handshake-dispatcher/controllers"
     "github.com/autonomousdotai/handshake-dispatcher/middlewares"
     "github.com/autonomousdotai/handshake-dispatcher/config"
+    "github.com/autonomousdotai/handshake-dispatcher/models"
 )
 
 func NewRouter() *gin.Engine {
@@ -74,6 +76,8 @@ func Forwarding(c *gin.Context, endpoint *interface{}, path string) {
     r := c.Request
     w := c.Writer
     
+    user, _ := c.Get("User")
+
     url, _ := url.Parse((*endpoint).(string) + path)
     director := func(req *http.Request) {
         req.URL.Scheme = url.Scheme
@@ -84,6 +88,7 @@ func Forwarding(c *gin.Context, endpoint *interface{}, path string) {
             v := c.GetHeader(k)
             req.Header.Set(k, v)
         }
+        req.Header.Set("uid", strconv.FormatUint(uint64((user.(models.User)).ID), 10))
     }
     proxy := &httputil.ReverseProxy{Director: director} 
     proxy.Transport = &ForwardingTransport{}

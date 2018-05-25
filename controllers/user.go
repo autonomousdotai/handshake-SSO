@@ -33,7 +33,9 @@ func (u UserController) SignUp(c *gin.Context) {
         return
     }
 
-    c.JSON(http.StatusOK, gin.H{"passpharse": passpharse})
+    data := map[string]interface{}{"passpharse": passpharse}
+
+    c.JSON(http.StatusOK, gin.H{"status": 1, "data": data})
     return
 }
 
