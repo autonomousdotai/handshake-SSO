@@ -1,7 +1,6 @@
 package middlewares
 
 import (
-    "fmt"
     "strings"
     "net/http"
 
@@ -19,10 +18,9 @@ func AuthMiddleware() gin.HandlerFunc {
         p := strings.TrimSpace(payload)
 
         if len(p) == 0 {
-            fmt.Println("return with 401")
-            // Response message Unauthorized
-            c.AbortWithStatus(401)
-            return
+            c.JSON(http.StatusOK, gin.H{"status": 0, "message": "Invalid user!"})
+            c.Abort()
+            return;
         }
        
         bkey := []byte(conf.GetString("secret_key"))
@@ -33,8 +31,6 @@ func AuthMiddleware() gin.HandlerFunc {
             c.Abort()
             return;
         }
-
-        fmt.Println(p, uuid)
 
         user := models.User{}
         errDb := models.Database().Where("uuid = ?", uuid).First(&user).Error

@@ -23,6 +23,10 @@ func NewRouter() *gin.Engine {
 
     api := router.Group("api")
     {
+        api.GET("/", func(c *gin.Context) {
+            c.JSON(http.StatusOK, gin.H{"status": 1, "message": "Handshake REST API"})
+        })
+
         userController := new(controllers.UserController)
         userGroup := api.Group("user")
         {

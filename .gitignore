@@ -1,4 +1,6 @@
+*~
 *.swp
+
 
 # ignore config
 config/*.yaml
