@@ -26,7 +26,7 @@ func NewRouter() *gin.Engine {
     })
 
     userController := new(controllers.UserController)
-    userGroup := api.Group("user")
+    userGroup := router.Group("user")
     {
         userGroup.GET("/profile", middlewares.AuthMiddleware(), userController.Profile)
 
