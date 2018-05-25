@@ -21,33 +21,30 @@ func NewRouter() *gin.Engine {
     router.Use(gin.Logger())
     router.Use(gin.Recovery())
 
-    api := router.Group("api")
+    router.GET("/", func(c *gin.Context) {
+        c.JSON(http.StatusOK, gin.H{"status": 1, "message": "Handshake REST API"})
+    })
+
+    userController := new(controllers.UserController)
+    userGroup := api.Group("user")
     {
-        api.GET("/", func(c *gin.Context) {
-            c.JSON(http.StatusOK, gin.H{"status": 1, "message": "Handshake REST API"})
-        })
+        userGroup.GET("/profile", middlewares.AuthMiddleware(), userController.Profile)
 
-        userController := new(controllers.UserController)
-        userGroup := api.Group("user")
-        {
-            userGroup.GET("/profile", middlewares.AuthMiddleware(), userController.Profile)
+        userGroup.POST("/profile", middlewares.AuthMiddleware(), userController.UpdateProfile)
 
-            userGroup.POST("/profile", middlewares.AuthMiddleware(), userController.UpdateProfile)
-
-            userGroup.POST("/sign-up", userController.SignUp)
-        }
+        userGroup.POST("/sign-up", userController.SignUp)
+    }
         
-        conf := config.GetConfig()
-        for ex, ep := range conf.GetStringMap("forwarding") { 
-            endpoint := ep
-            api.Any(ex, middlewares.AuthMiddleware(), func(c *gin.Context) {
-                Forwarding(c, &endpoint, "")
-            })
-            api.Any(ex + "/*path", middlewares.AuthMiddleware(), func(c *gin.Context) {
-                path := c.Param("path")
-                Forwarding(c, &endpoint, path)
-            })
-        }
+    conf := config.GetConfig()
+    for ex, ep := range conf.GetStringMap("forwarding") { 
+        endpoint := ep
+        router.Any(ex, middlewares.AuthMiddleware(), func(c *gin.Context) {
+            Forwarding(c, &endpoint, "")
+        })
+        router.Any(ex + "/*path", middlewares.AuthMiddleware(), func(c *gin.Context) {
+            path := c.Param("path")
+            Forwarding(c, &endpoint, path)
+        })
     }
 
     return router
