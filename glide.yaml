@@ -1,4 +1,4 @@
-package: .
+package: github.com/autonomousdotai/handshake-dispatcher
 import:
 - package: github.com/gin-gonic/gin
   version: v1.2

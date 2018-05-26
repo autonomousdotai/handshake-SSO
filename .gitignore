@@ -5,5 +5,5 @@
 # ignore config
 config/*.yaml
 
-vecdor
+vendor
 glide.lock
