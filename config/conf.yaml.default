@@ -6,3 +6,8 @@ forwarding:
     betting: http://localhost:8083
     marketplace: http://localhost:8084
 
+services:
+    algolia: http://localhost:8085
+    mail: http://localhost:8086
+    ipfs: http://localhost:8087
+    fcm: http://localhost:8089

@@ -2,7 +2,6 @@ package middlewares
 
 import (
     "strings"
-    "net/http"
 
     "github.com/gin-gonic/gin"
     "github.com/autonomousdotai/handshake-dispatcher/config"
@@ -18,27 +17,21 @@ func AuthMiddleware() gin.HandlerFunc {
         p := strings.TrimSpace(payload)
 
         if len(p) == 0 {
-            c.JSON(http.StatusOK, gin.H{"status": 0, "message": "Invalid user!"})
-            c.Abort()
-            return;
+            panic("Invalid user.")
         }
        
         bkey := []byte(conf.GetString("secret_key"))
         uuid, err := utils.HashDecrypt(bkey, p)
        
         if err != nil {
-            c.JSON(http.StatusOK, gin.H{"status": 0, "message": "Invalid user!"})
-            c.Abort()
-            return;
+            panic("Invalid user.")
         }
 
         user := models.User{}
         errDb := models.Database().Where("uuid = ?", uuid).First(&user).Error
         
         if errDb != nil {
-            c.JSON(http.StatusOK, gin.H{"status": 0, "message": "Invalid user!"})
-            c.Abort()
-            return;
+            panic("Invalid user.")    
         }
         
         c.Set("User", user)
