@@ -7,15 +7,11 @@ import (
 )
 
 func CORSMiddleware() gin.HandlerFunc {
-    return cors.New(cors.Config{
-        AllowOrigins: []string{"http://*, https://*"},
-        AllowMethods: []string{"POST", "GET", "OPTIONS", "PUT", "DELETE", "UPDATE"},
-        AllowHeaders: []string{"Content-Type", "Origin", "Device-Type", "Device-Id", "Payload", "*"},
-        ExposeHeaders: []string{"Content-Length"},
-        AllowCredentials: true,
-        AllowOriginFunc: func (origin string) bool {
-            return true
-        },
-        MaxAge: 12 * time.Hour,
-    })
+    config := cors.DefaultConfig()
+    config.AllowAllOrigins = true
+    config.AllowHeaders = []string{"Content-Type", "Origin", "Payload", "*"}
+    config.ExposeHeaders = []string{"Content-Length"}
+    config.AllowCredentials = true
+
+    return cors.New(config)
 }
