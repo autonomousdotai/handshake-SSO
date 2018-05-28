@@ -39,7 +39,7 @@ func NewRouter() *gin.Engine {
     handshakeGroup := router.Group("handshake")
     {
         handshakeGroup.GET("/me", middlewares.AuthMiddleware(), handshakeController.Me)
-        handshakeGroup.GET("/dicover", handshakeController.Discover)
+        handshakeGroup.GET("/discover", handshakeController.Discover)
     }
 
 

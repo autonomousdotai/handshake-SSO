@@ -33,11 +33,14 @@ func (s SolrService) List(t string, q []string, offset int, limit int) (map[stri
     client := &http.Client{}
     response, err := client.Do(request)
     if err != nil {
+        fmt.Println(err.Error())
         return nil, err
     }
 
     b, _ := ioutil.ReadAll(response.Body)
     
+    fmt.Println(string(b))
+
     var data map[string]interface{}
     json.Unmarshal(b, data)
 
