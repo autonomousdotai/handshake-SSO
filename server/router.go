@@ -34,7 +34,13 @@ func NewRouter() *gin.Engine {
 
         userGroup.POST("/sign-up", userController.SignUp)
     }
-        
+
+    systemController := new(controllers.SystemController)
+    systemGroup := router.Group("system")
+    {
+        systemGroup.GET("/user/:id", systemController.User)
+    }
+
     conf := config.GetConfig()
     for ex, ep := range conf.GetStringMap("forwarding") { 
         endpoint := ep

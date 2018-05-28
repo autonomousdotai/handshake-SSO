@@ -11,8 +11,6 @@ import (
 
 type UserController struct{}
 
-var userModel = new(models.User)
-
 func (u UserController) SignUp(c *gin.Context) {
     config := config.GetConfig()
     UUID, passpharse, err := utils.HashNewUID(config.GetString("secret_key"))
@@ -42,9 +40,11 @@ func (u UserController) SignUp(c *gin.Context) {
 
 func (u UserController) Profile(c *gin.Context) {  
     var userModel models.User
+    
     user, _ := c.Get("User")
     userModel = user.(models.User)
     userModel.UUID = ""
+    
     resp := JsonResponse{1, "", userModel}
     c.JSON(http.StatusOK, resp)
 }
