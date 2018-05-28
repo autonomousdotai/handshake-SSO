@@ -35,11 +35,21 @@ func NewRouter() *gin.Engine {
         userGroup.POST("/sign-up", userController.SignUp)
     }
 
+    handshakeController := new(controllers.HandshakeController)
+    handshakeGroup := router.Group("handshake")
+    {
+        handshakeGroup.GET("/me", middlewares.AuthMiddleware(), handshakeController.Me)
+        handshakeGroup.GET("/dicover", handshakeController.Discover)
+    }
+
+
     systemController := new(controllers.SystemController)
     systemGroup := router.Group("system")
     {
         systemGroup.GET("/user/:id", systemController.User)
     }
+
+
 
     conf := config.GetConfig()
     for ex, ep := range conf.GetStringMap("forwarding") { 
