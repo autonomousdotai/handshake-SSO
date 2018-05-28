@@ -36,7 +36,7 @@ func (u HandshakeController) Me(c *gin.Context) {
     return
 }
 
-func (u UserController) Discover(c *gin.Context) {  
+func (u HandshakeController) Discover(c *gin.Context) {  
     solr := new (services.SolrService)
     data, err := solr.List("handshake", []string{"id:*"}, 0, 100)
     
