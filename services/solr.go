@@ -48,8 +48,10 @@ func (s SolrService) List(t string, q []string, offset int, limit int) (map[stri
 
     wrapData := make(map[string]interface{})
     handshakes := []map[string]interface{}{}
-
+    
+    fmt.Println("Start parse Results")
     for k, v := range data["Results"].(map[string]interface{}) {
+        fmt.Println("Parse key", k)
         if k == "NumFound" {
             wrapData["total"] = v
         }
@@ -70,7 +72,7 @@ func (s SolrService) List(t string, q []string, offset int, limit int) (map[stri
             }
         }
     }
-
+    fmt.Println("end parse result")
     wrapData["handshakes"] = handshakes
 
     return wrapData, nil
