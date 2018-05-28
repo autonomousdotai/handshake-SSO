@@ -27,7 +27,9 @@ func (s SolrService) List(t string, q []string, offset int, limit int) (map[stri
     endpoint := GetSolrEndpoint(t)
     jsonValue, _ := json.Marshal(jsonData)
     
-    request, _ := http.NewRequest("GET", endpoint, bytes.NewBuffer(jsonValue))
+    endpoint = fmt.Sprintf("%s/select", endpoint)
+
+    request, _ := http.NewRequest("GET", endpoint , bytes.NewBuffer(jsonValue))
     request.Header.Set("Content-Type", "application/json")
     
     client := &http.Client{}
