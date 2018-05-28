@@ -10,7 +10,7 @@ import (
 type SystemController struct{}
 
 func (s SystemController) User(c *gin.Context) {  
-    userId := c.Query("id")
+    userId := c.Param("id")
     user := models.User{}
     err := models.Database().Where("id = ?", userId).First(&user).Error
 
