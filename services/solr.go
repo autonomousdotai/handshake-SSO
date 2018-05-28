@@ -80,13 +80,8 @@ func (s SolrService) List(t string, q []string, offset int, limit int) (map[stri
 }
 
 func (s SolrService) Create(t string, d map[string]interface{}) (bool, error) {
-    fmt.Println("Start create handshake")
     jsonData := make(map[string]interface{})
-    add := make(map[string]interface{})
-    for k, v := range d {
-        add[k] = v
-    }
-    jsonData["add"] = []map[string]interface{}{add}
+    jsonData["add"] = []map[string]interface{}{d}
 
     endpoint := GetSolrEndpoint(t)
     jsonValue, _ := json.Marshal(jsonData)
@@ -121,16 +116,14 @@ func (s SolrService) Create(t string, d map[string]interface{}) (bool, error) {
 
 func (s SolrService) Update(t string, d map[string]interface{}) (bool, error) {
     jsonData := make(map[string]interface{})
-    update := make(map[string]interface{})
-    for k, v := range d {
-        update[k] = v
-    }
-    jsonData["update"] = update
+    jsonData["add"] = []map[string]interface{}{d}
 
     endpoint := GetSolrEndpoint(t)
     jsonValue, _ := json.Marshal(jsonData)
    
     endpoint = fmt.Sprintf("%s/update", endpoint)
+
+    fmt.Println(endpoint, jsonData)
 
     request, _ := http.NewRequest("POST", endpoint, bytes.NewBuffer(jsonValue))
     request.Header.Set("Content-Type", "application/json")
@@ -161,8 +154,6 @@ func (s SolrService) Delete(t string, id string) (bool, error) {
     delete["id"] = id
     jsonData["delete"] = delete
     
-    fmt.Println(jsonData)
-
     endpoint := GetSolrEndpoint(t)
     jsonValue, _ := json.Marshal(jsonData)
  
