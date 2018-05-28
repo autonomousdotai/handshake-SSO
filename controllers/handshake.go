@@ -1,31 +1,32 @@
 package controllers
 
 import (
+    "fmt"
     "net/http"
     "strconv"
-    "strings"
+    "encoding/json"
     "github.com/gin-gonic/gin"
 
     "github.com/autonomousdotai/handshake-dispatcher/models"
     "github.com/autonomousdotai/handshake-dispatcher/services"
 )
 
+const LIMIT = 100
+
 type HandshakeController struct{}
 
 func (u HandshakeController) Me(c *gin.Context) {
     page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-    limit := 100
 
     user, _ := c.Get("User")
     userModel := user.(models.User)
     
-    userId := strconv.FormatUint(uint64(userModel.ID), 10)
 
     solr := new(services.SolrService)
 
-    init_id := []string{"init_id:", userId}
-    shaked_ids := []string{"shaked_ids:\"[", userId, "]\""}
-    data, err := solr.List("handshake", []string{"id:*", strings.Join(init_id, ""), strings.Join(shaked_ids, "")}, (page - 1) * limit, limit) 
+    init_id := fmt.Sprintf("init_user_id_i: %d", userModel.ID)
+    //shaked_ids := []string{"shaked_ids_is:\"[", userId, "]\""}
+    data, err := solr.List("handshake", []string{init_id}, (page - 1) * LIMIT, LIMIT) 
 
     if err != nil {
         resp := JsonResponse{0, err.Error(), nil}
@@ -35,6 +36,7 @@ func (u HandshakeController) Me(c *gin.Context) {
     }
 
     data["page"] = page
+    data["limit"] = LIMIT
 
     resp := JsonResponse{1, "", data}
     c.JSON(http.StatusOK, resp)
@@ -43,10 +45,9 @@ func (u HandshakeController) Me(c *gin.Context) {
 
 func (u HandshakeController) Discover(c *gin.Context) {  
     page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-    limit := 100
     
     solr := new (services.SolrService)
-    data, err := solr.List("handshake", []string{"id:*"}, (page - 1) * limit, limit)
+    data, err := solr.List("handshake", []string{"id:*"}, (page - 1) * LIMIT, LIMIT)
 
     if err != nil {
         resp := JsonResponse{0, err.Error(), nil}
@@ -56,8 +57,69 @@ func (u HandshakeController) Discover(c *gin.Context) {
     }
    
     data["page"] = page
+    data["limit"] = LIMIT
 
     resp := JsonResponse{1, "", data}
+    c.JSON(http.StatusOK, resp)
+    return
+}
+
+func (u HandshakeController) Create(c *gin.Context) {
+    data := c.PostForm("data")
+
+    var handshake map[string]interface{}
+    json.Unmarshal([]byte(data), &handshake)
+
+    solr := new(services.SolrService)
+    result, _ := solr.Create("handshake", handshake)
+
+    if !result {
+        resp := JsonResponse{0, "Create handshake fail", nil}
+        c.JSON(http.StatusOK, resp)
+        c.Abort()
+        return;
+    }
+
+    resp := JsonResponse{1, "", handshake}
+    c.JSON(http.StatusOK, resp)
+    return
+}
+
+func (u HandshakeController) Update(c *gin.Context) {
+    data := c.PostForm("data")
+
+    var handshake map[string]interface{}
+    json.Unmarshal([]byte(data), &handshake)
+
+    solr := new(services.SolrService)
+    result, _ := solr.Update("handshake", handshake)
+
+    if !result {
+        resp := JsonResponse{0, "Update handshake fail", nil}
+        c.JSON(http.StatusOK, resp)
+        c.Abort()
+        return;
+    }
+
+    resp := JsonResponse{1, "", handshake}
+    c.JSON(http.StatusOK, resp)
+    return
+}
+
+func (u HandshakeController) Delete(c *gin.Context) {
+    id := c.PostForm("id")
+    fmt.Println("delete id", id)
+    solr := new(services.SolrService)
+    result, _ := solr.Delete("handshake", id)
+
+    if !result {
+        resp := JsonResponse{0, "Delete handshake fail", nil}
+        c.JSON(http.StatusOK, resp)
+        c.Abort()
+        return;
+    }
+
+    resp := JsonResponse{1, "", result}
     c.JSON(http.StatusOK, resp)
     return
 }
