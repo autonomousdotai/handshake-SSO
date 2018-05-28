@@ -13,6 +13,9 @@ import (
 type HandshakeController struct{}
 
 func (u HandshakeController) Me(c *gin.Context) {
+    page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+    limit := 100
+
     user, _ := c.Get("User")
     userModel := user.(models.User)
     
@@ -22,7 +25,7 @@ func (u HandshakeController) Me(c *gin.Context) {
 
     init_id := []string{"init_id:", userId}
     shaked_ids := []string{"shaked_ids:\"[", userId, "]\""}
-    data, err := solr.List("handshake", []string{"id:*", strings.Join(init_id, ""), strings.Join(shaked_ids, "")}, 0, 100)
+    data, err := solr.List("handshake", []string{"id:*", strings.Join(init_id, ""), strings.Join(shaked_ids, "")}, (page - 1) * limit, limit) 
 
     if err != nil {
         resp := JsonResponse{0, err.Error(), nil}
@@ -30,6 +33,8 @@ func (u HandshakeController) Me(c *gin.Context) {
         c.Abort()
         return;
     }
+
+    data["page"] = page
 
     resp := JsonResponse{1, "", data}
     c.JSON(http.StatusOK, resp)
@@ -37,16 +42,21 @@ func (u HandshakeController) Me(c *gin.Context) {
 }
 
 func (u HandshakeController) Discover(c *gin.Context) {  
-    solr := new (services.SolrService)
-    data, err := solr.List("handshake", []string{"id:*"}, 0, 100)
+    page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+    limit := 100
     
+    solr := new (services.SolrService)
+    data, err := solr.List("handshake", []string{"id:*"}, (page - 1) * limit, limit)
+
     if err != nil {
         resp := JsonResponse{0, err.Error(), nil}
         c.JSON(http.StatusOK, resp)
         c.Abort()
         return;
     }
-    
+   
+    data["page"] = page
+
     resp := JsonResponse{1, "", data}
     c.JSON(http.StatusOK, resp)
     return
