@@ -6,10 +6,12 @@ import (
     "encoding/json"
     "io/ioutil"
     "net/http"
+    "strings"
     "github.com/autonomousdotai/handshake-dispatcher/config"
 )
 
 type SolrService struct {}
+
 
 func (s SolrService) List(t string, q []string, offset int, limit int) (map[string]interface{}, error) {
     jsonData := make(map[string]interface{})
@@ -39,7 +41,34 @@ func (s SolrService) List(t string, q []string, offset int, limit int) (map[stri
     var data map[string]interface{}
     json.Unmarshal(b, data)
 
-    return data, nil
+    wrapData := make(map[string]interface{})
+    handshakes := []map[string]interface{}{}
+
+    for k, v := range data["Results"].(map[string]interface{}) {
+        if k == "NumFound" {
+            wrapData["total"] = v
+        }
+        if k == "Start" {
+            wrapData["index"] = v
+        }
+        if k == "Collection" {
+            collections := v.([]map[string]interface{})
+            for _, collection := range collections {
+                fields := collection["Fields"].(map[string]interface{})
+                handshake := make(map[string]interface{})
+                for k3, v3 := range fields {
+                    if k3 != "version" {
+                        handshake[CleanSolrName(k3)] = v3;
+                    }
+                }
+                handshakes = append(handshakes, handshake)
+            }
+        }
+    }
+
+    wrapData["handshakes"] = handshakes
+
+    return wrapData, nil
 }
 
 func (s SolrService) Create(t string, d map[string]string) (bool, error) {
@@ -158,4 +187,24 @@ func GetSolrEndpoint(t string) string {
     }
 
     return endpoint
+}
+
+func CleanSolrName(name string) string {
+    ignoreSuffixes := []string{"_i", "_is", "_s", "_ss", "_l", "_ls", "_t", "_txt", "_b", "_bs", "_f", "_fs", "_d", "_ds", "_str", "_dt", "_dts", "_p", "_srpt", "_dpf", "_dpi", "_dps"}
+
+    ignorePrefixes := []string{"attr_"}
+ 
+    result := name
+    for _, suffix := range(ignoreSuffixes) {
+        if strings.HasSuffix(result, suffix) {
+            result = result[:len(result)-len(suffix)]
+        }
+    }
+
+    for _, prefix := range(ignorePrefixes) {
+        if strings.HasPrefix(result, prefix) {
+            result = result[len(prefix):len(result)-len(prefix)]
+        }
+    }
+    return result
 }
