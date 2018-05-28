@@ -12,6 +12,9 @@ import (
 
 type SolrService struct {}
 
+func (s SolrService) Init() {
+    
+}
 
 func (s SolrService) List(t string, q []string, offset int, limit int) (map[string]interface{}, error) {
     jsonData := make(map[string]interface{})
@@ -19,7 +22,7 @@ func (s SolrService) List(t string, q []string, offset int, limit int) (map[stri
         params := make(map[string]interface{})
         params["q"] = q
         
-        jsonData["params"] = params
+        jsonData["Params"] = params
     }
     jsonData["Start"] = offset
     jsonData["Rows"] = limit
@@ -40,8 +43,6 @@ func (s SolrService) List(t string, q []string, offset int, limit int) (map[stri
     }
 
     b, _ := ioutil.ReadAll(response.Body)
-    
-    fmt.Println(string(b))
 
     var data map[string]interface{}
     json.Unmarshal(b, &data)
@@ -49,9 +50,7 @@ func (s SolrService) List(t string, q []string, offset int, limit int) (map[stri
     wrapData := make(map[string]interface{})
     handshakes := []map[string]interface{}{}
     
-    fmt.Println("Start parse Results")
     for k, v := range data["Results"].(map[string]interface{}) {
-        fmt.Println("Parse key", k)
         if k == "NumFound" {
             wrapData["total"] = v
         }
@@ -59,71 +58,70 @@ func (s SolrService) List(t string, q []string, offset int, limit int) (map[stri
             wrapData["index"] = v
         }
         if k == "Collection" {
-            collections, colOk := v.([]map[string]interface{})
-            fmt.Println("Start parse Collections", colOk)
+            collections, colOk := v.([]interface{})
             if colOk {
-                for _, collection := range collections {
-                    fmt.Println("start parse collection item")
+                for _, item := range collections {
+                    collection := item.(map[string]interface{})
                     fields := collection["Fields"].(map[string]interface{})
                     handshake := make(map[string]interface{})
-                    fmt.Println("start extract data")
                     for k3, v3 := range fields {
-                        fmt.Println("extract field", k3);
-                        if k3 != "version" {
+                        if k3 != "_version_" {
                             handshake[CleanSolrName(k3)] = v3;
                         }
                     }
-                    fmt.Println("add to handshakes")
                     handshakes = append(handshakes, handshake)
                 }
             }
         }
     }
-    fmt.Println("end parse result")
     wrapData["handshakes"] = handshakes
 
     return wrapData, nil
 }
 
-func (s SolrService) Create(t string, d map[string]string) (bool, error) {
+func (s SolrService) Create(t string, d map[string]interface{}) (bool, error) {
+    fmt.Println("Start create handshake")
     jsonData := make(map[string]interface{})
-    add := make(map[string]string)
+    add := make(map[string]interface{})
     for k, v := range d {
         add[k] = v
     }
-    jsonData["add"] = add
+    jsonData["add"] = []map[string]interface{}{add}
 
     endpoint := GetSolrEndpoint(t)
     jsonValue, _ := json.Marshal(jsonData)
  
     endpoint = fmt.Sprintf("%s/update", endpoint)
-
+    fmt.Println("endpoint", endpoint, jsonValue)
     request, _ := http.NewRequest("POST", endpoint, bytes.NewBuffer(jsonValue))
     request.Header.Set("Content-Type", "application/json")
-    
+    fmt.Println("build request success") 
     client := &http.Client{}
+    fmt.Println("Before request")
     response, err := client.Do(request)
     if err != nil {
+        fmt.Println("Error response", err)
         return false, err
     }
 
     b, _ := ioutil.ReadAll(response.Body)
     
     var data map[string]interface{}
-    json.Unmarshal(b, data)
+    json.Unmarshal(b, &data)
 
     result, ok := data["Success"]
     
     if ok {
+        fmt.Println("has key Success")
         return result.(bool), nil
     } else {
         return false, nil
     }
 }
 
-func (s SolrService) Update(t string, d map[string]string) (bool, error) {
+func (s SolrService) Update(t string, d map[string]interface{}) (bool, error) {
     jsonData := make(map[string]interface{})
-    update := make(map[string]string)
+    update := make(map[string]interface{})
     for k, v := range d {
         update[k] = v
     }
@@ -146,7 +144,7 @@ func (s SolrService) Update(t string, d map[string]string) (bool, error) {
     b, _ := ioutil.ReadAll(response.Body)
     
     var data map[string]interface{}
-    json.Unmarshal(b, data)
+    json.Unmarshal(b, &data)
 
     result, ok := data["Success"]
 
@@ -162,6 +160,8 @@ func (s SolrService) Delete(t string, id string) (bool, error) {
     delete := make(map[string]string)
     delete["id"] = id
     jsonData["delete"] = delete
+    
+    fmt.Println(jsonData)
 
     endpoint := GetSolrEndpoint(t)
     jsonValue, _ := json.Marshal(jsonData)
@@ -180,7 +180,7 @@ func (s SolrService) Delete(t string, id string) (bool, error) {
     b, _ := ioutil.ReadAll(response.Body)
     
     var data map[string]interface{}
-    json.Unmarshal(b, data)
+    json.Unmarshal(b, &data)
 
     result, ok := data["Success"]
 
