@@ -6,13 +6,14 @@ import (
 )
 
 func CORSMiddleware() gin.HandlerFunc {
-	config := cors.DefaultConfig()
-	config.AllowOrigins = []string{"*"}
-	config.AllowHeaders = []string{"Content-Type", "Origin", "Payload", "*"}
-	config.ExposeHeaders = []string{"Content-Length"}
-	config.AllowCredentials = true
-	config.AllowOriginFunc = func(origin string) bool {
-		return true
-	}
-	return cors.New(config)
+	return cors.New(cors.Config{
+		AllowOrigins:     []string{"*"},
+		AllowMethods:     []string{"POST", "GET", "OPTIONS", "PUT", "DELETE", "PATCH"},
+		AllowHeaders:     []string{"Content-Type", "Origin", "Payload", "*"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		AllowOriginFunc: func(origin string) bool {
+			return true
+		},
+	})
 }
