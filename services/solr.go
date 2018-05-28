@@ -29,7 +29,7 @@ func (s SolrService) List(t string, q []string, offset int, limit int) (map[stri
     
     endpoint = fmt.Sprintf("%s/select", endpoint)
 
-    request, _ := http.NewRequest("GET", endpoint , bytes.NewBuffer(jsonValue))
+    request, _ := http.NewRequest("POST", endpoint , bytes.NewBuffer(jsonValue))
     request.Header.Set("Content-Type", "application/json")
     
     client := &http.Client{}
@@ -86,7 +86,9 @@ func (s SolrService) Create(t string, d map[string]string) (bool, error) {
 
     endpoint := GetSolrEndpoint(t)
     jsonValue, _ := json.Marshal(jsonData)
-    
+ 
+    endpoint = fmt.Sprintf("%s/update", endpoint)
+
     request, _ := http.NewRequest("POST", endpoint, bytes.NewBuffer(jsonValue))
     request.Header.Set("Content-Type", "application/json")
     
@@ -120,7 +122,9 @@ func (s SolrService) Update(t string, d map[string]string) (bool, error) {
 
     endpoint := GetSolrEndpoint(t)
     jsonValue, _ := json.Marshal(jsonData)
-    
+   
+    endpoint = fmt.Sprintf("%s/update", endpoint)
+
     request, _ := http.NewRequest("POST", endpoint, bytes.NewBuffer(jsonValue))
     request.Header.Set("Content-Type", "application/json")
     
@@ -152,7 +156,9 @@ func (s SolrService) Delete(t string, id string) (bool, error) {
 
     endpoint := GetSolrEndpoint(t)
     jsonValue, _ := json.Marshal(jsonData)
-    
+ 
+    endpoint = fmt.Sprintf("%s/update", endpoint)
+
     request, _ := http.NewRequest("POST", endpoint, bytes.NewBuffer(jsonValue))
     request.Header.Set("Content-Type", "application/json")
     
