@@ -59,20 +59,23 @@ func (s SolrService) List(t string, q []string, offset int, limit int) (map[stri
             wrapData["index"] = v
         }
         if k == "Collection" {
-            collections := v.([]map[string]interface{})
-            fmt.Println("Start parse Collections")
-            for _, collection := range collections {
-                fmt.Println("start parse collection item")
-                fields := collection["Fields"].(map[string]interface{})
-                handshake := make(map[string]interface{})
-                fmt.Println("start extract data")
-                for k3, v3 := range fields {
-                    if k3 != "version" {
-                        handshake[CleanSolrName(k3)] = v3;
+            collections, colOk := v.([]map[string]interface{})
+            fmt.Println("Start parse Collections", colOk)
+            if colOk {
+                for _, collection := range collections {
+                    fmt.Println("start parse collection item")
+                    fields := collection["Fields"].(map[string]interface{})
+                    handshake := make(map[string]interface{})
+                    fmt.Println("start extract data")
+                    for k3, v3 := range fields {
+                        fmt.Println("extract field", k3);
+                        if k3 != "version" {
+                            handshake[CleanSolrName(k3)] = v3;
+                        }
                     }
+                    fmt.Println("add to handshakes")
+                    handshakes = append(handshakes, handshake)
                 }
-                fmt.Println("add to handshakes")
-                handshakes = append(handshakes, handshake)
             }
         }
     }
