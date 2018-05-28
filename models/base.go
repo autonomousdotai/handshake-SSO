@@ -5,21 +5,19 @@ import (
     "time"
 )
 
-type Model struct {
-    ID uint `gorm:"primary_key"`
-
-    DateCreated time.Time `gorm:"column:date_created"`
-    DateModified time.Time `gorm:"column:date_modified"`
-
+type BaseModel struct {
+    ID uint `gorm:"primary_key" json:"id"`
+    DateCreated time.Time `gorm:"column:date_created" json:"date_created"`
+    DateModified time.Time `gorm:"column:date_modified" json:"date_modified"`
 }
 
-func (m *Model) BeforeCreate() (err error) {
+func (m *BaseModel) BeforeCreate() (err error) {
     m.DateCreated = time.Now()
     m.DateModified = time.Now()
     return
 }
 
-func (m *Model) BeforeUpdate() (err error) {
+func (m *BaseModel) BeforeUpdate() (err error) {
     m.DateModified = time.Now()
     return
 }

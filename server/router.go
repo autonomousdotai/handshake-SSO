@@ -22,9 +22,8 @@ func NewRouter() *gin.Engine {
     router.Use(middlewares.CORSMiddleware())
     router.Use(middlewares.ErrorHandler())
 
-    router.GET("/", func(c *gin.Context) {
-        c.JSON(http.StatusOK, gin.H{"status": 1, "message": "Handshake REST API"})
-    })
+    defaultController := new(controllers.DefaultController)
+    router.GET("/", defaultController.Home) 
 
     userController := new(controllers.UserController)
     userGroup := router.Group("user")
@@ -48,9 +47,7 @@ func NewRouter() *gin.Engine {
         })
     }
 
-    router.NoRoute(func(c *gin.Context) {
-        c.JSON(http.StatusOK, gin.H{"status": 0, "message": "Page not found"})
-    })
+    router.NoRoute(defaultController.NotFound)
 
     return router
 }
@@ -64,6 +61,7 @@ func (t *ForwardingTransport) RoundTrip(request *http.Request) (*http.Response, 
 
     if err != nil {
         fmt.Println("\n\ncame in error resp here", err)
+        return nil, err
     }
 
     elapsed := time.Since(start)

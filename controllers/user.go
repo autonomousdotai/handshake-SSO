@@ -18,36 +18,74 @@ func (u UserController) SignUp(c *gin.Context) {
     UUID, passpharse, err := utils.HashNewUID(config.GetString("secret_key"))
    
     if err != nil {
-        c.JSON(http.StatusOK, gin.H{"status": 0, "message": "Sign Up failed!"})
+        resp := JsonResponse{0, "Sign up failed", nil}
+        c.JSON(http.StatusOK, resp)
         return
     }
 
     // todo add new user with key
-    tx := models.Database()
+    db := models.Database()
     user := models.User{UUID: UUID}
 
-    errDb := tx.Create(&user).Error;
+    errDb := db.Create(&user).Error;
 
     if errDb != nil {
-        c.JSON(http.StatusOK, gin.H{"status": 0, "message": "Sign Up failed!"})
+        resp := JsonResponse{0, "Sign up failed", nil}
+        c.JSON(http.StatusOK, resp)
         return
     }
 
-    data := map[string]interface{}{"passpharse": passpharse}
-
-    c.JSON(http.StatusOK, gin.H{"status": 1, "data": data})
+    resp := JsonResponse{1, "", map[string]interface{}{"passpharse": passpharse}}
+    c.JSON(http.StatusOK, resp)
     return
 }
 
 func (u UserController) Profile(c *gin.Context) {  
+    var userModel models.User
     user, _ := c.Get("User")
-    c.JSON(http.StatusOK, gin.H{"page": "Profile", "user": user})
+    userModel = user.(models.User)
+    userModel.UUID = ""
+    resp := JsonResponse{1, "", userModel}
+    c.JSON(http.StatusOK, resp)
 }
 
 func (u UserController) UpdateProfile(c *gin.Context) {
-    c.JSON(http.StatusOK, gin.H{"page": "Update Profile"})
+    var userModel models.User
+    
+    user, _ := c.Get("User")
+    userModel = user.(models.User)
+    
+    email := c.DefaultPostForm("email", "_")
+    name := c.DefaultPostForm("name", "_")
+    avatar, _ := c.FormFile("avatar")
+    
+    if email != "_" {
+        userModel.Email = email
+    }
+    if name != "_" {
+        userModel.Name = name
+    }
+    
+    if avatar != nil {
+        userModel.Avatar = avatar.Filename
+    }
+
+    db := models.Database()
+    dbErr := db.Save(&userModel).Error
+
+    if dbErr != nil {
+        resp := JsonResponse{0, "Update profile failed.", nil}
+        c.JSON(http.StatusOK, resp)
+        return
+    }
+
+    userModel.UUID = ""
+
+    resp := JsonResponse{1, "", userModel}
+    c.JSON(http.StatusOK, resp)
 }
 
 func (u UserController) ExportPassphrase(c *gin.Context) {
-    c.JSON(http.StatusOK, gin.H{"page": "Export File Passphrase"})
+    resp := JsonResponse{1, "", "Export passpharse"}
+    c.JSON(http.StatusOK, resp)
 }
