@@ -96,25 +96,12 @@ func (u UserController) ExportPassphrase(c *gin.Context) {
     c.JSON(http.StatusOK, resp)
 }
 
-func GetExchangeEndpoint() string {
-    conf := config.GetConfig()
-    var endpoint string
-    
-    for ex, ep := range conf.GetStringMap("forwading") {
-        if ex == "exchange" {
-            endpoint = ep.(string)
-            break
-        }
-    }
-
-    return endpoint
-}
-
 func ExchangeSignUp(userId uint) {
     jsonData := make(map[string]interface{})
     jsonData["id"] = userId
 
-    endpoint := GetExchangeEndpoint()
+    endpoint, found := utils.GetForwardingEndpoint("exchange")
+    fmt.Println(endpoint, found)
     jsonValue, _ := json.Marshal(jsonData)
   
     endpoint = fmt.Sprintf("%s/%s", endpoint, "/user/profile")

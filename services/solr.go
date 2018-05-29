@@ -7,7 +7,7 @@ import (
     "io/ioutil"
     "net/http"
     "strings"
-    "github.com/autonomousdotai/handshake-dispatcher/config"
+    "github.com/autonomousdotai/handshake-dispatcher/utils"
 )
 
 type SolrService struct {}
@@ -27,10 +27,10 @@ func (s SolrService) List(t string, q []string, offset int, limit int) (map[stri
     jsonData["Start"] = offset
     jsonData["Rows"] = limit
 
-    endpoint := GetSolrEndpoint(t)
+    endpoint, _ := utils.GetServicesEndpoint("solr")
     jsonValue, _ := json.Marshal(jsonData)
     
-    endpoint = fmt.Sprintf("%s/select", endpoint)
+    endpoint = fmt.Sprintf("%s/%s/select", endpoint, t)
 
     request, _ := http.NewRequest("POST", endpoint , bytes.NewBuffer(jsonValue))
     request.Header.Set("Content-Type", "application/json")
@@ -83,16 +83,16 @@ func (s SolrService) Create(t string, d map[string]interface{}) (bool, error) {
     jsonData := make(map[string]interface{})
     jsonData["add"] = []map[string]interface{}{d}
 
-    endpoint := GetSolrEndpoint(t)
+    endpoint, _ := utils.GetServicesEndpoint("solr")
     jsonValue, _ := json.Marshal(jsonData)
+    
+    endpoint = fmt.Sprintf("%s/%s/update", endpoint, t)
  
-    endpoint = fmt.Sprintf("%s/update", endpoint)
-    fmt.Println("endpoint", endpoint, jsonValue)
     request, _ := http.NewRequest("POST", endpoint, bytes.NewBuffer(jsonValue))
     request.Header.Set("Content-Type", "application/json")
-    fmt.Println("build request success") 
+    
     client := &http.Client{}
-    fmt.Println("Before request")
+    
     response, err := client.Do(request)
     if err != nil {
         fmt.Println("Error response", err)
@@ -118,10 +118,10 @@ func (s SolrService) Update(t string, d map[string]interface{}) (bool, error) {
     jsonData := make(map[string]interface{})
     jsonData["add"] = []map[string]interface{}{d}
 
-    endpoint := GetSolrEndpoint(t)
+    endpoint, _ := utils.GetServicesEndpoint("solr")
     jsonValue, _ := json.Marshal(jsonData)
    
-    endpoint = fmt.Sprintf("%s/update", endpoint)
+    endpoint = fmt.Sprintf("%s/%s/update", endpoint, t)
 
     fmt.Println(endpoint, jsonData)
 
@@ -154,10 +154,10 @@ func (s SolrService) Delete(t string, id string) (bool, error) {
     delete["id"] = id
     jsonData["delete"] = delete
     
-    endpoint := GetSolrEndpoint(t)
+    endpoint, _ := utils.GetServicesEndpoint("solr")
     jsonValue, _ := json.Marshal(jsonData)
  
-    endpoint = fmt.Sprintf("%s/update", endpoint)
+    endpoint = fmt.Sprintf("%s/%s/update", endpoint, t)
 
     request, _ := http.NewRequest("POST", endpoint, bytes.NewBuffer(jsonValue))
     request.Header.Set("Content-Type", "application/json")
@@ -180,24 +180,6 @@ func (s SolrService) Delete(t string, id string) (bool, error) {
     } else {
         return false, nil
     }
-}
-
-func GetSolrEndpoint(t string) string {
-    conf := config.GetConfig()
-    var endpoint string
-    
-    for ex, ep := range conf.GetStringMap("services") {
-        if ex == "solr" {
-            endpoint = ep.(string)
-            break
-        }
-    }
-
-    if len(endpoint) > 0 {
-        endpoint = fmt.Sprintf("%s/%s", endpoint, t)    
-    }
-
-    return endpoint
 }
 
 func CleanSolrName(name string) string {
