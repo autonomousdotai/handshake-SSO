@@ -100,7 +100,7 @@ func GetExchangeEndpoint() string {
     conf := config.GetConfig()
     var endpoint string
     
-    for ex, ep := range conf.GetStringMap("services") {
+    for ex, ep := range conf.GetStringMap("forwading") {
         if ex == "exchange" {
             endpoint = ep.(string)
             break
