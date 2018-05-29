@@ -16,14 +16,19 @@ func (s SolrService) Init() {
     
 }
 
-func (s SolrService) List(t string, q []string, offset int, limit int) (map[string]interface{}, error) {
+func (s SolrService) List(t string, q []string, offset int, limit int, sort []string) (map[string]interface{}, error) {
     jsonData := make(map[string]interface{})
+    
+    params := make(map[string]interface{})
     if q != nil {
-        params := make(map[string]interface{})
-        params["q"] = q
-        
-        jsonData["Params"] = params
+        params["q"] = q    
     }
+
+    if sort != nil {
+        params["sort"] = sort
+    }
+
+    jsonData["Params"] = params
     jsonData["Start"] = offset
     jsonData["Rows"] = limit
 

@@ -26,7 +26,7 @@ func (u HandshakeController) Me(c *gin.Context) {
 
     init_id := fmt.Sprintf("init_user_id_i: %d", userModel.ID)
     //shaked_ids := []string{"shaked_ids_is:\"[", userId, "]\""}
-    data, err := solr.List("handshake", []string{init_id}, (page - 1) * LIMIT, LIMIT) 
+    data, err := solr.List("handshake", []string{init_id}, (page - 1) * LIMIT, LIMIT, []string{"def(init_at_i, 0) desc"}) 
 
     if err != nil {
         resp := JsonResponse{0, err.Error(), nil}
@@ -47,7 +47,7 @@ func (u HandshakeController) Discover(c *gin.Context) {
     page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
     
     solr := new (services.SolrService)
-    data, err := solr.List("handshake", []string{"id:*"}, (page - 1) * LIMIT, LIMIT)
+    data, err := solr.List("handshake", []string{"id:*"}, (page - 1) * LIMIT, LIMIT, []string{"sum(mul(def(shake_count_i,0), 8),mul(def(comment_count_i,0), 4),mul(def(view_count_i,0), 2),def(init_at_i, 0),def(last_update_at_i, 0)) desc"})
 
     if err != nil {
         resp := JsonResponse{0, err.Error(), nil}
