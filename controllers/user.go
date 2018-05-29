@@ -1,7 +1,10 @@
 package controllers
 
 import (
+    "fmt"
     "net/http"
+    "bytes"
+    "encoding/json"
     "github.com/gin-gonic/gin"
 
     "github.com/autonomousdotai/handshake-dispatcher/config"
@@ -32,6 +35,9 @@ func (u UserController) SignUp(c *gin.Context) {
         c.JSON(http.StatusOK, resp)
         return
     }
+
+    // implement another logic
+    go ExchangeSignUp(user.ID)
 
     resp := JsonResponse{1, "", map[string]interface{}{"passpharse": passpharse}}
     c.JSON(http.StatusOK, resp)
@@ -88,4 +94,37 @@ func (u UserController) UpdateProfile(c *gin.Context) {
 func (u UserController) ExportPassphrase(c *gin.Context) {
     resp := JsonResponse{1, "", "Export passpharse"}
     c.JSON(http.StatusOK, resp)
+}
+
+func GetExchangeEndpoint() string {
+    conf := config.GetConfig()
+    var endpoint string
+    
+    for ex, ep := range conf.GetStringMap("services") {
+        if ex == "exchange" {
+            endpoint = ep.(string)
+            break
+        }
+    }
+
+    return endpoint
+}
+
+func ExchangeSignUp(userId uint) {
+    jsonData := make(map[string]interface{})
+    jsonData["id"] = userId
+
+    endpoint := GetExchangeEndpoint()
+    jsonValue, _ := json.Marshal(jsonData)
+  
+    endpoint = fmt.Sprintf("%s/%s", endpoint, "/user/profile")
+    
+    request, _ := http.NewRequest("POST", endpoint, bytes.NewBuffer(jsonValue))
+    request.Header.Set("Content-Type", "application/json")
+    
+    client := &http.Client{}
+    _, err := client.Do(request)
+    if err != nil {
+        fmt.Println("call exchange failed ", err)
+    }
 }

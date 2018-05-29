@@ -36,7 +36,7 @@ func (u HandshakeController) Me(c *gin.Context) {
     }
 
     data["page"] = page
-    data["limit"] = LIMIT
+    data["page_size"] = LIMIT
 
     resp := JsonResponse{1, "", data}
     c.JSON(http.StatusOK, resp)
@@ -57,7 +57,7 @@ func (u HandshakeController) Discover(c *gin.Context) {
     }
    
     data["page"] = page
-    data["limit"] = LIMIT
+    data["page_size"] = LIMIT
 
     resp := JsonResponse{1, "", data}
     c.JSON(http.StatusOK, resp)
