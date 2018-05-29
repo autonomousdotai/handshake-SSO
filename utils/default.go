@@ -1,7 +1,6 @@
 package utils
 
 import (
-    "fmt"
     "github.com/autonomousdotai/handshake-dispatcher/config"
 )
 
