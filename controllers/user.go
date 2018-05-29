@@ -113,5 +113,7 @@ func ExchangeSignUp(userId uint) {
     _, err := client.Do(request)
     if err != nil {
         fmt.Println("call exchange failed ", err)
+    } else {
+        fmt.Println("call exchange on SignUp success")
     }
 }

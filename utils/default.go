@@ -11,7 +11,6 @@ func GetForwardingEndpoint(t string) (string, bool) {
     found := false
 
     for n, ep := range conf.GetStringMap("forwarding") {
-        fmt.Println(n, ep)
         if n == t {
             endpoint = ep.(string)
             found = true
