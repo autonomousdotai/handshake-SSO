@@ -104,7 +104,7 @@ func ExchangeSignUp(userId uint) {
     fmt.Println(endpoint, found)
     jsonValue, _ := json.Marshal(jsonData)
   
-    endpoint = fmt.Sprintf("%s/%s", endpoint, "/user/profile")
+    endpoint = fmt.Sprintf("%s/%s", endpoint, "user/profile")
     
     request, _ := http.NewRequest("POST", endpoint, bytes.NewBuffer(jsonValue))
     request.Header.Set("Content-Type", "application/json")
