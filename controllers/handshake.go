@@ -70,7 +70,7 @@ func (u HandshakeController) Discover(c *gin.Context) {
         search_type := fmt.Sprintf("type_i:%s", t)
         has_type := fmt.Sprint("type_i:[* TO *]")
         q = append(q, search_type)
-
+        fq = append(fq, has_type)
     }
 
     if !has_cond {
