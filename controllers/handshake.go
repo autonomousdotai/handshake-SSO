@@ -58,7 +58,7 @@ func (u HandshakeController) Discover(c *gin.Context) {
     s = append(s, "sum(mul(def(shake_count_i,0), 8),mul(def(comment_count_i,0), 4),mul(def(view_count_i,0), 2),if(def(last_update_at_i, 0), div(last_update_at_i, 3000000), 0)) desc")
 
     q = append(q, "is_private_i:0")
-    fq = append(fq, "is_private_i:[* TO *]"
+    fq = append(fq, "is_private_i:[* TO *]")
 
     if kws!= "_" {
         has_cond = true
