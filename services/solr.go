@@ -16,12 +16,16 @@ func (s SolrService) Init() {
     
 }
 
-func (s SolrService) List(t string, q []string, offset int, limit int, sort []string) (map[string]interface{}, error) {
+func (s SolrService) List(t string, q []string, fq []string, offset int, limit int, sort []string) (map[string]interface{}, error) {
     jsonData := make(map[string]interface{})
     
     params := make(map[string]interface{})
     if q != nil {
-        params["q"] = q    
+        params["q"] = q 
+    }
+
+    if fq != nil {
+        params["fq"] = fq
     }
 
     if sort != nil {
@@ -32,12 +36,14 @@ func (s SolrService) List(t string, q []string, offset int, limit int, sort []st
     jsonData["Start"] = offset
     jsonData["Rows"] = limit
 
+    fmt.Println(jsonData)
+
     endpoint, _ := utils.GetServicesEndpoint("solr")
     jsonValue, _ := json.Marshal(jsonData)
     
     endpoint = fmt.Sprintf("%s/%s/select", endpoint, t)
 
-    request, _ := http.NewRequest("POST", endpoint , bytes.NewBuffer(jsonValue))
+    request, _ := http.NewRequest("POST", endpoint, bytes.NewBuffer(jsonValue))
     request.Header.Set("Content-Type", "application/json")
     
     client := &http.Client{}
