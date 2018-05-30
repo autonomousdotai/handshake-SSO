@@ -16,27 +16,25 @@ func (s SolrService) Init() {
     
 }
 
-func (s SolrService) List(t string, q []string, fq []string, offset int, limit int, sort []string) (map[string]interface{}, error) {
+func (s SolrService) List(t string, q string, fq string, offset int, limit int, sort string) (map[string]interface{}, error) {
     jsonData := make(map[string]interface{})
     
     params := make(map[string]interface{})
-    if q != nil {
-        params["q"] = q 
+    if len(q) > 0 {
+        params["q"] = []string{q} 
     }
 
-    if fq != nil {
-        params["fq"] = fq
+    if len(fq) > 0 {
+        params["fq"] = []string{fq}
     }
 
-    if sort != nil {
-        params["sort"] = sort
+    if len(sort) > 0 {
+        params["sort"] = []string{sort}
     }
 
     jsonData["Params"] = params
     jsonData["Start"] = offset
     jsonData["Rows"] = limit
-
-    fmt.Println(jsonData)
 
     endpoint, _ := utils.GetServicesEndpoint("solr")
     jsonValue, _ := json.Marshal(jsonData)
@@ -61,26 +59,30 @@ func (s SolrService) List(t string, q []string, fq []string, offset int, limit i
     wrapData := make(map[string]interface{})
     handshakes := []map[string]interface{}{}
     
-    for k, v := range data["Results"].(map[string]interface{}) {
-        if k == "NumFound" {
-            wrapData["total"] = v
-        }
-        if k == "Start" {
-            wrapData["index"] = v
-        }
-        if k == "Collection" {
-            collections, colOk := v.([]interface{})
-            if colOk {
-                for _, item := range collections {
-                    collection := item.(map[string]interface{})
-                    fields := collection["Fields"].(map[string]interface{})
-                    handshake := make(map[string]interface{})
-                    for k3, v3 := range fields {
-                        if k3 != "_version_" {
-                            handshake[CleanSolrName(k3)] = v3;
+    results, hasResults := data["Results"]
+    
+    if hasResults {
+        for k, v := range results.(map[string]interface{}) {
+            if k == "NumFound" {
+                wrapData["total"] = v
+            }
+            if k == "Start" {
+                wrapData["index"] = v
+            }
+            if k == "Collection" {
+                collections, colOk := v.([]interface{})
+                if colOk {
+                    for _, item := range collections {
+                        collection := item.(map[string]interface{})
+                        fields := collection["Fields"].(map[string]interface{})
+                        handshake := make(map[string]interface{})
+                        for k3, v3 := range fields {
+                            if k3 != "_version_" {
+                                handshake[CleanSolrName(k3)] = v3;
+                            }
                         }
+                        handshakes = append(handshakes, handshake)
                     }
-                    handshakes = append(handshakes, handshake)
                 }
             }
         }

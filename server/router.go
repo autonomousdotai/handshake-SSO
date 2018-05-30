@@ -21,6 +21,7 @@ func NewRouter() *gin.Engine {
     router.Use(gin.Logger())
     router.Use(middlewares.CORSMiddleware())
     router.Use(middlewares.ErrorHandler())
+    router.Use(middlewares.ChainMiddleware())
 
     defaultController := new(controllers.DefaultController)
     router.GET("/", defaultController.Home) 
@@ -51,8 +52,6 @@ func NewRouter() *gin.Engine {
     {
         systemGroup.GET("/user/:id", systemController.User)
     }
-
-
 
     conf := config.GetConfig()
     for ex, ep := range conf.GetStringMap("forwarding") { 
@@ -85,13 +84,12 @@ func (t *ForwardingTransport) RoundTrip(request *http.Request) (*http.Response, 
 
     elapsed := time.Since(start)
     
-    body, err := httputil.DumpResponse(response, true)
+    _, err = httputil.DumpResponse(response, true)
     if err != nil {
         fmt.Println("\n\ndump response error");
     }
 
     log.Printf("%s - %d\n", request.Method + request.URL.Path, elapsed.Nanoseconds)
-    log.Println("Response Body:", string(body))
     return response, nil
 }
 
