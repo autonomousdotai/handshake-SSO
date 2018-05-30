@@ -60,15 +60,17 @@ func (u HandshakeController) Discover(c *gin.Context) {
     if kws!= "_" {
         has_cond = true
         search_text_search := fmt.Sprintf("text_search_ss:*\"%s\"*", kws)
-        has_text_search := fmt.Sprintf("text_search_ss:[* TO *]")
+        has_text_search := fmt.Sprint("text_search_ss:[* TO *]")
         q = append(q, search_text_search)
         fq = append(fq, has_text_search)
     }
 
     if t != "_" {
         has_cond = true
-        search_type := fmt.Sprint("type_i:%s", t)
+        search_type := fmt.Sprintf("type_i:%s", t)
+        has_type := fmt.Sprint("type_i:[* TO *]")
         q = append(q, search_type)
+
     }
 
     if !has_cond {
