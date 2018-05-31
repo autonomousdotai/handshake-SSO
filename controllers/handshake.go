@@ -5,6 +5,7 @@ import (
     "net/http"
     "strconv"
     "encoding/json"
+    "strings"
     "github.com/gin-gonic/gin"
 
     "github.com/autonomousdotai/handshake-dispatcher/models"
@@ -35,18 +36,14 @@ func (u HandshakeController) Me(c *gin.Context) {
     s = "def(init_at_i, 0) desc"
 
     // query
+    q = "*.*"
+
+    // filter query
     search_init_user_id := fmt.Sprintf("init_user_id_i: %d", userModel.ID)
     search_shaked_user_ids := fmt.Sprintf("shake_user_ids_is: %d", userModel.ID)
     search_chain_id := fmt.Sprintf("chain_id_i: %d", chainId)
-    q = fmt.Sprintf("(%s OR %s) AND %s", search_init_user_id, search_shaked_user_ids, search_chain_id)
+    fq = fmt.Sprintf("(%s OR %s) AND %s", search_init_user_id, search_shaked_user_ids, search_chain_id)
     
-    // filter query
-    has_chain_id := "chain_id_i:[* TO *]"
-    has_init_user_id := "init_user_id_i:[* TO *]"
-    //has_shake_user_ids_is := "shake_user_ids_is:[* TO *]"
-
-    fq = fmt.Sprintf("%s AND %s", has_chain_id, has_init_user_id)
-
     data, err := solrService.List("handshake", q, fq, (page - 1) * LIMIT, LIMIT, s) 
  
     if err != nil {
@@ -78,36 +75,42 @@ func (u HandshakeController) Discover(c *gin.Context) {
         return;
     }
 
-    has_cond := false
     var q, fq, s string
     
     // sort
     s = "sum(mul(def(shake_count_i,0), 8),mul(def(comment_count_i,0), 4),mul(def(view_count_i,0), 2),if(def(last_update_at_i, 0), div(last_update_at_i, 3000000), 0)) desc"
-    
-    // query
-    q = fmt.Sprintf("is_private_i:0 AND chain_id_i:%d", chainId) 
-    
-    // filter query
-    fq = "is_private_i:[* TO *] AND chain_id_i:[* TO *]"
 
+    // filter query
+    fq = fmt.Sprintf("is_private_i:0 AND chain_id_i:%d", chainId) 
+
+    // query
     if kws != "_" {
-        has_cond = true
-        search_text_search := fmt.Sprintf("text_search_ss:*\"%s\"*", kws)
-        has_text_search := fmt.Sprint("text_search_ss:[* TO *]")
-        q = fmt.Sprintf("%s AND %s", q, search_text_search)
-        //fq = fmt.Sprintf("%s AND %s", fq, has_text_search)
+        words := strings.Fields(kws)
+        fmt.Println(words, len(words))
+        search_text_search := ""
+        for _,word := range words {
+            if len(search_text_search) > 0 {
+                search_text_search = fmt.Sprintf("%s *%s*", search_text_search, word)
+            } else {
+                search_text_search = fmt.Sprintf("*%s*", word) 
+            }
+        }
+        search_text_search = fmt.Sprintf("text_search_ss:(%s)", search_text_search)
+        if len(q) > 0 {
+            q = fmt.Sprintf("%s AND %s", q, search_text_search)
+        } else {
+            q = search_text_search
+        }
+        fmt.Println("kws", kws)
     }
 
     if t != "_" {
-        has_cond = true
         search_type := fmt.Sprintf("type_i:%s", t)
-        has_type := fmt.Sprint("type_i:[* TO *]")
-        q = fmt.Sprintf("%s AND %s", q, search_type)
-        //fq = fmt.Sprintf("%s AND %s", fq, has_type)
+        fq = fmt.Sprintf("%s AND %s", fq, search_type)
     }
 
-    if !has_cond {
-        q = fmt.Sprintf("%s AND %s", q, "id:*")
+    if len(q) == 0 {
+        q = "id:*"
     }
 
     data, err := solrService.List("handshake", q, fq, (page - 1) * LIMIT, LIMIT, s)

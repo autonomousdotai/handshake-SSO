@@ -36,6 +36,8 @@ func (s SolrService) List(t string, q string, fq string, offset int, limit int, 
     jsonData["Start"] = offset
     jsonData["Rows"] = limit
 
+    fmt.Println(jsonData)
+
     endpoint, _ := utils.GetServicesEndpoint("solr")
     jsonValue, _ := json.Marshal(jsonData)
     
