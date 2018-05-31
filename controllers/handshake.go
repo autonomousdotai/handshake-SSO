@@ -130,10 +130,21 @@ func (u HandshakeController) Discover(c *gin.Context) {
 }
 
 func (u HandshakeController) Create(c *gin.Context) {
+    chainId, hasChain := c.Get("ChainId")
+
+    if !hasChain {
+        resp := JsonResponse{0, "Invalid Chain Id", nil}
+        c.JSON(http.StatusOK, resp)
+        c.Abort()
+        return;
+    }
+
     data := c.PostForm("data")
 
     var handshake map[string]interface{}
     json.Unmarshal([]byte(data), &handshake)
+
+    handshake["chain_id_i"] = chainId
 
     result, _ := solrService.Create("handshake", handshake)
 
@@ -150,10 +161,21 @@ func (u HandshakeController) Create(c *gin.Context) {
 }
 
 func (u HandshakeController) Update(c *gin.Context) {
+    chainId, hasChain := c.Get("ChainId")
+
+    if !hasChain {
+        resp := JsonResponse{0, "Invalid Chain Id", nil}
+        c.JSON(http.StatusOK, resp)
+        c.Abort()
+        return;
+    }
+
     data := c.PostForm("data")
 
     var handshake map[string]interface{}
     json.Unmarshal([]byte(data), &handshake)
+
+    handshake["chain_id_i"] = chainId
 
     result, _ := solrService.Update("handshake", handshake)
 
