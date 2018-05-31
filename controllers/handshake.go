@@ -43,9 +43,9 @@ func (u HandshakeController) Me(c *gin.Context) {
     // filter query
     has_chain_id := "chain_id_i:[* TO *]"
     has_init_user_id := "init_user_id_i:[* TO *]"
-    has_shake_user_ids_is := "shake_user_ids_is:[* TO *]"
+    //has_shake_user_ids_is := "shake_user_ids_is:[* TO *]"
 
-    fq = fmt.Sprintf("%s AND %s AND %s", has_chain_id, has_init_user_id, has_shake_user_ids_is)
+    fq = fmt.Sprintf("%s AND %s", has_chain_id, has_init_user_id)
 
     data, err := solrService.List("handshake", q, fq, (page - 1) * LIMIT, LIMIT, s) 
  
@@ -95,7 +95,7 @@ func (u HandshakeController) Discover(c *gin.Context) {
         search_text_search := fmt.Sprintf("text_search_ss:*\"%s\"*", kws)
         has_text_search := fmt.Sprint("text_search_ss:[* TO *]")
         q = fmt.Sprintf("%s AND %s", q, search_text_search)
-        fq = fmt.Sprintf("%s AND %s", fq, has_text_search)
+        //fq = fmt.Sprintf("%s AND %s", fq, has_text_search)
     }
 
     if t != "_" {
@@ -103,7 +103,7 @@ func (u HandshakeController) Discover(c *gin.Context) {
         search_type := fmt.Sprintf("type_i:%s", t)
         has_type := fmt.Sprint("type_i:[* TO *]")
         q = fmt.Sprintf("%s AND %s", q, search_type)
-        fq = fmt.Sprintf("%s AND %s", fq, has_type)
+        //fq = fmt.Sprintf("%s AND %s", fq, has_type)
     }
 
     if !has_cond {
