@@ -36,7 +36,7 @@ func (u HandshakeController) Me(c *gin.Context) {
     s = "def(init_at_i, 0) desc"
 
     // query
-    q = "*.*"
+    q = "id:*"
 
     // filter query
     search_init_user_id := fmt.Sprintf("init_user_id_i: %d", userModel.ID)

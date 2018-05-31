@@ -58,6 +58,8 @@ func (s SolrService) List(t string, q string, fq string, offset int, limit int, 
     var data map[string]interface{}
     json.Unmarshal(b, &data)
 
+    fmt.Println(data)
+
     wrapData := make(map[string]interface{})
     handshakes := []map[string]interface{}{}
     
