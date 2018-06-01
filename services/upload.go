@@ -16,6 +16,8 @@ func (s UploadService) Upload(path string, source *multipart.FileHeader) (bool, 
     endpoint, _ := utils.GetServicesEndpoint("storage")
     endpoint = fmt.Sprintf("%s?file=%s", endpoint, path)
 
+    fmt.Println(endpoint)
+
     file, fileErr := source.Open()
     if fileErr != nil {
         fmt.Println("Read file error: ", fileErr)
@@ -30,10 +32,15 @@ func (s UploadService) Upload(path string, source *multipart.FileHeader) (bool, 
         return false, err
     }
 
+    fmt.Println("before upload")
+
     request, _ := http.NewRequest("POST", endpoint, bytes.NewBuffer(fb))
-   
+  
     client := &http.Client{}
     response, err := client.Do(request)
+
+    fmt.Println("after upload")
+
     if err != nil {
         return false, err
     }
