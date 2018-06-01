@@ -64,6 +64,7 @@ func (u UserController) UpdateProfile(c *gin.Context) {
     email := c.DefaultPostForm("email", "_")
     name := c.DefaultPostForm("name", "_")
     rwas := c.DefaultPostForm("reward_wallet_addresses", "_")
+    phone := c.DefaultPostForm("phone", "_")
     avatar, _ := c.FormFile("avatar")
     
     if email != "_" {
@@ -74,6 +75,9 @@ func (u UserController) UpdateProfile(c *gin.Context) {
     }
     if rwas != "_" {
         userModel.RewardWalletAddresses = rwas
+    }
+    if phone != "_" {
+        userModel.Phone = phone
     }
     
     if avatar != nil {

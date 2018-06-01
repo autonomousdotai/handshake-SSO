@@ -8,6 +8,7 @@ type User struct {
     BaseModel
     Email string `gorm:"column:email" json:"email"`
     Name string `gorm:"column:name" json:"name"`
+    Phone string `gorm:"column:phone" json:"phone"`
     Avatar string `gorm:"column:avatar" json:"avatar"`
     UUID string `gorm:"column:uuid;unique;not null;" json:"uuid,omitempty"`
     Status int `gorm:"column:status;default:1;" json:"status"`
