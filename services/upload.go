@@ -59,6 +59,7 @@ func (s UploadService) Upload(path string, source *multipart.FileHeader) (bool, 
 
     fmt.Println(1 == result)
     fmt.Println("1" == result)
+    fmt.Println("1" == strconv.Itoa(result))
     fmt.Printf("%T\n", result)
 
     if ok {
