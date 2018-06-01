@@ -5,3 +5,4 @@ import (
 )
 
 var solrService = new(services.SolrService)
+var uploadService = new(services.UploadService)

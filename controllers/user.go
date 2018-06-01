@@ -5,6 +5,8 @@ import (
     "net/http"
     "bytes"
     "encoding/json"
+    "strings"
+    "time"
     "github.com/gin-gonic/gin"
 
     "github.com/autonomousdotai/handshake-dispatcher/config"
@@ -65,7 +67,7 @@ func (u UserController) UpdateProfile(c *gin.Context) {
     name := c.DefaultPostForm("name", "_")
     rwas := c.DefaultPostForm("reward_wallet_addresses", "_")
     phone := c.DefaultPostForm("phone", "_")
-    avatar, _ := c.FormFile("avatar")
+    avatar, avatarErr := c.FormFile("avatar")
     
     if email != "_" {
         userModel.Email = email
@@ -80,8 +82,22 @@ func (u UserController) UpdateProfile(c *gin.Context) {
         userModel.Phone = phone
     }
     
-    if avatar != nil {
-        userModel.Avatar = avatar.Filename
+    if avatarErr == nil {
+        uploadImageFolder := "user"
+        fileName := avatar.Filename
+        imageExt := strings.Split(fileName, ".")[1]
+        fileNameImage := fmt.Sprintf("avatar-%d-image-%s.%s", userModel.ID, time.Now().Format("20060102150405"), imageExt)
+        path := uploadImageFolder + "/" + fileNameImage 
+
+        success, _ := uploadService.Upload(path, avatar)
+        if !success {
+            resp := JsonResponse{0, "Update profile failed: upload file error", nil}
+            c.JSON(http.StatusOK, resp)
+            c.Abort()
+            return  
+        }
+
+        userModel.Avatar = path
     }
 
     db := models.Database()
@@ -90,6 +106,7 @@ func (u UserController) UpdateProfile(c *gin.Context) {
     if dbErr != nil {
         resp := JsonResponse{0, "Update profile failed.", nil}
         c.JSON(http.StatusOK, resp)
+        c.Abort()
         return
     }
 

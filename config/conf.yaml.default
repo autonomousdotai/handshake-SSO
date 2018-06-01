@@ -10,3 +10,4 @@ services:
     mail: http://localhost:8086
     ipfs: http://localhost:8087
     fcm: http://localhost:8089
+    storage: http://localhost:8090
