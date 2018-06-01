@@ -47,7 +47,7 @@ func (s UploadService) Upload(path string, source *multipart.FileHeader) (bool, 
     result, ok := data["status"]
     
     if ok {
-        return (float(64) == result), nil
+        return (float64(1) == result), nil
     } else {
         return false, nil
     }
