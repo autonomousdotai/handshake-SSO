@@ -83,16 +83,11 @@ func (u UserController) UpdateProfile(c *gin.Context) {
     }
     
     if avatarErr == nil {
-        fmt.Println("start upload avatar")
-        fmt.Println(avatar)
-
         uploadImageFolder := "user"
         fileName := avatar.Filename
         imageExt := strings.Split(fileName, ".")[1]
         fileNameImage := fmt.Sprintf("avatar-%d-image-%s.%s", userModel.ID, time.Now().Format("20060102150405"), imageExt)
         path := uploadImageFolder + "/" + fileNameImage 
-
-        fmt.Println(path)
 
         success, _ := uploadService.Upload(path, avatar)
         if !success {

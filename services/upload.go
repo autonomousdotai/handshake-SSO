@@ -16,8 +16,6 @@ func (s UploadService) Upload(path string, source *multipart.FileHeader) (bool, 
     endpoint, _ := utils.GetServicesEndpoint("storage")
     endpoint = fmt.Sprintf("%s?file=%s", endpoint, path)
 
-    fmt.Println(endpoint)
-
     file, fileErr := source.Open()
     if fileErr != nil {
         fmt.Println("Read file error: ", fileErr)
@@ -32,14 +30,10 @@ func (s UploadService) Upload(path string, source *multipart.FileHeader) (bool, 
         return false, err
     }
 
-    fmt.Println("before upload")
-
     request, _ := http.NewRequest("POST", endpoint, bytes.NewBuffer(fb))
   
     client := &http.Client{}
     response, err := client.Do(request)
-
-    fmt.Println("after upload")
 
     if err != nil {
         return false, err
@@ -50,20 +44,10 @@ func (s UploadService) Upload(path string, source *multipart.FileHeader) (bool, 
     var data map[string]interface{}
     json.Unmarshal(b, &data)
 
-    fmt.Println(data)
-
     result, ok := data["status"]
     
-    fmt.Println(data)
-    fmt.Println(result, ok)
-
-    fmt.Println(1 == result)
-    fmt.Println("1" == result)
-    fmt.Println("1" == strconv.Itoa(result))
-    fmt.Printf("%T\n", result)
-
     if ok {
-        return ("1" == result), nil
+        return (float(64) == result), nil
     } else {
         return false, nil
     }
