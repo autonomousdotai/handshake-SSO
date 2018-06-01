@@ -54,6 +54,9 @@ func (s UploadService) Upload(path string, source *multipart.FileHeader) (bool, 
 
     result, ok := data["status"]
 
+    fmt.Println(result)
+    fmt.Println(1 == result)
+
     if ok {
         return (1 == result), nil
     } else {
