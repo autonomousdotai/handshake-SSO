@@ -50,6 +50,8 @@ func (s UploadService) Upload(path string, source *multipart.FileHeader) (bool, 
     var data map[string]interface{}
     json.Unmarshal(b, &data)
 
+    fmt.Println(data)
+
     result, ok := data["status"]
 
     if ok {
