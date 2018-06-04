@@ -110,7 +110,8 @@ func Forwarding(c *gin.Context, endpoint *interface{}, path string) {
             v := c.GetHeader(k)
             req.Header.Set(k, v)
         }
-        req.Header.Set("uid", strconv.FormatUint(uint64((user.(models.User)).ID), 10))
+        req.Header.Set("Uid", strconv.FormatUint(uint64((user.(models.User)).ID), 10))
+        req.Header.Set("Fcm-Token", (user.(model.User)).FCMToken)
     }
     proxy := &httputil.ReverseProxy{Director: director} 
     proxy.Transport = &ForwardingTransport{}
