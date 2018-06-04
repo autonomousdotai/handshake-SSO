@@ -7,7 +7,7 @@ import (
     "io/ioutil"
     "net/http"
     "mime/multipart"
-    "github.com/autonomousdotai/handshake-dispatcher/utils"
+    "github.com/ninjadotorg/handshake-dispatcher/utils"
 )
 
 type UploadService struct {}

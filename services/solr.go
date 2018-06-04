@@ -7,7 +7,7 @@ import (
     "io/ioutil"
     "net/http"
     "strings"
-    "github.com/autonomousdotai/handshake-dispatcher/utils"
+    "github.com/ninjadotorg/handshake-dispatcher/utils"
 )
 
 type SolrService struct {}

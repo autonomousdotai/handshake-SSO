@@ -1,7 +1,7 @@
 package server
 
 import (
-    _ "github.com/autonomousdotai/handshake-dispatcher/config"
+    _ "github.com/ninjadotorg/handshake-dispatcher/config"
 )
 
 func Init() {

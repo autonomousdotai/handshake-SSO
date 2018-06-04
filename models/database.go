@@ -5,7 +5,7 @@ import (
     _ "fmt"   
     "github.com/jinzhu/gorm"
     _ "github.com/jinzhu/gorm/dialects/mysql"
-    "github.com/autonomousdotai/handshake-dispatcher/config"
+    "github.com/ninjadotorg/handshake-dispatcher/config"
 )
 
 var dbInst *gorm.DB = nil

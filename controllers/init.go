@@ -1,7 +1,7 @@
 package controllers
 
 import (
-    "github.com/autonomousdotai/handshake-dispatcher/services"
+    "github.com/ninjadotorg/handshake-dispatcher/services"
 )
 
 var solrService = new(services.SolrService)

@@ -10,10 +10,10 @@ import (
     "strconv"
     "github.com/gin-gonic/gin"
 
-    "github.com/autonomousdotai/handshake-dispatcher/controllers"
-    "github.com/autonomousdotai/handshake-dispatcher/middlewares"
-    "github.com/autonomousdotai/handshake-dispatcher/config"
-    "github.com/autonomousdotai/handshake-dispatcher/models"
+    "github.com/ninjadotorg/handshake-dispatcher/controllers"
+    "github.com/ninjadotorg/handshake-dispatcher/middlewares"
+    "github.com/ninjadotorg/handshake-dispatcher/config"
+    "github.com/ninjadotorg/handshake-dispatcher/models"
 )
 
 func NewRouter() *gin.Engine {

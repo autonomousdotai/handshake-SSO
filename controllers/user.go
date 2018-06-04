@@ -9,9 +9,9 @@ import (
     "time"
     "github.com/gin-gonic/gin"
 
-    "github.com/autonomousdotai/handshake-dispatcher/config"
-    "github.com/autonomousdotai/handshake-dispatcher/models"
-    "github.com/autonomousdotai/handshake-dispatcher/utils"
+    "github.com/ninjadotorg/handshake-dispatcher/config"
+    "github.com/ninjadotorg/handshake-dispatcher/models"
+    "github.com/ninjadotorg/handshake-dispatcher/utils"
 )
 
 type UserController struct{}
@@ -67,6 +67,7 @@ func (u UserController) UpdateProfile(c *gin.Context) {
     name := c.DefaultPostForm("name", "_")
     rwas := c.DefaultPostForm("reward_wallet_addresses", "_")
     phone := c.DefaultPostForm("phone", "_")
+    ft := c.DefaultPostForm("fcm_token", "_")
     avatar, avatarErr := c.FormFile("avatar")
     
     if email != "_" {
@@ -80,6 +81,9 @@ func (u UserController) UpdateProfile(c *gin.Context) {
     }
     if phone != "_" {
         userModel.Phone = phone
+    }
+    if ft != "_" {
+        userModel.FCMToken = ft
     }
     
     if avatarErr == nil {

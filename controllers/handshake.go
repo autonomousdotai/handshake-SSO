@@ -8,7 +8,7 @@ import (
     "strings"
     "github.com/gin-gonic/gin"
 
-    "github.com/autonomousdotai/handshake-dispatcher/models"
+    "github.com/ninjadotorg/handshake-dispatcher/models"
 )
 
 const LIMIT = 100
@@ -75,13 +75,16 @@ func (u HandshakeController) Discover(c *gin.Context) {
         return;
     }
 
+    user, _ := c.Get("User")
+    userModel := user.(models.User)
+
     var q, fq, s string
     
     // sort
     s = "sum(mul(def(shake_count_i,0), 8),mul(def(comment_count_i,0), 4),mul(def(view_count_i,0), 2),if(def(last_update_at_i, 0), div(last_update_at_i, 3000000), 0)) desc"
 
     // filter query
-    fq = fmt.Sprintf("is_private_i:0 AND chain_id_i:%d", chainId) 
+    fq = fmt.Sprintf("is_private_i:0 AND chain_id_i:%d AND -init_user_id_i:%d", chainId, userModel.id) 
 
     // query
     if kws != "_" {

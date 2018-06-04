@@ -1,7 +1,7 @@
 package utils
 
 import (
-    "github.com/autonomousdotai/handshake-dispatcher/config"
+    "github.com/ninjadotorg/handshake-dispatcher/config"
 )
 
 func GetForwardingEndpoint(t string) (string, bool) {

@@ -15,6 +15,7 @@ type User struct {
     CardID string `gorm:"column:card_id;" json:"card_id"`
     CardVerified int `gorm:"column:card_verified;default:0" json:"card_verified"`
     RewardWalletAddresses string `gorm:"column:reward_wallet_addresses;size:1000" json:"reward_wallet_addresses"`
+    FCMToken string `gorm:"column:fcm_token;size:200" json:"fcm_token"`
 }
 
 func (u User) TableName() string {

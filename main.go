@@ -2,8 +2,8 @@ package main
 
 import (
     _ "fmt"
-    "github.com/autonomousdotai/handshake-dispatcher/config"
-    "github.com/autonomousdotai/handshake-dispatcher/server"
+    "github.com/ninjadotorg/handshake-dispatcher/config"
+    "github.com/ninjadotorg/handshake-dispatcher/server"
 )
 
 func main() {

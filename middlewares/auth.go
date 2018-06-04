@@ -4,9 +4,9 @@ import (
     "strings"
 
     "github.com/gin-gonic/gin"
-    "github.com/autonomousdotai/handshake-dispatcher/config"
-    "github.com/autonomousdotai/handshake-dispatcher/utils"
-    "github.com/autonomousdotai/handshake-dispatcher/models"
+    "github.com/ninjadotorg/handshake-dispatcher/config"
+    "github.com/ninjadotorg/handshake-dispatcher/utils"
+    "github.com/ninjadotorg/handshake-dispatcher/models"
 )
 
 func AuthMiddleware() gin.HandlerFunc {

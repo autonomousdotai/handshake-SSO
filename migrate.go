@@ -2,8 +2,8 @@ package main
 
 import (
     "github.com/jinzhu/gorm" 
-    "github.com/autonomousdotai/handshake-dispatcher/models"
-    "github.com/autonomousdotai/handshake-dispatcher/config"
+    "github.com/ninjadotorg/handshake-dispatcher/models"
+    "github.com/ninjadotorg/handshake-dispatcher/config"
 )
 
 func main() {
