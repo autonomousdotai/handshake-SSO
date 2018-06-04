@@ -40,10 +40,10 @@ func NewRouter() *gin.Engine {
     handshakeGroup := router.Group("handshake")
     {
         handshakeGroup.GET("/me", middlewares.AuthMiddleware(), handshakeController.Me)
-        handshakeGroup.GET("/discover", handshakeController.Discover)
-        handshakeGroup.POST("/create", handshakeController.Create)
-        handshakeGroup.POST("/update", handshakeController.Update)
-        handshakeGroup.POST("/delete", handshakeController.Delete)
+        handshakeGroup.GET("/discover", middlewares.AuthMiddleware(), handshakeController.Discover)
+        handshakeGroup.POST("/create", middlewares.AuthMiddleware(), handshakeController.Create)
+        handshakeGroup.POST("/update", middlewares.AuthMiddleware(), handshakeController.Update)
+        handshakeGroup.POST("/delete", middlewares.AuthMiddleware(), handshakeController.Delete)
     }
 
 

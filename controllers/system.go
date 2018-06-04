@@ -4,7 +4,7 @@ import (
     "net/http"
     "github.com/gin-gonic/gin"
 
-    "github.com/autonomousdotai/handshake-dispatcher/models"
+    "github.com/ninjadotorg/handshake-dispatcher/models"
 )
 
 type SystemController struct{}

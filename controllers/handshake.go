@@ -64,6 +64,7 @@ func (u HandshakeController) Me(c *gin.Context) {
 func (u HandshakeController) Discover(c *gin.Context) {  
     page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
     kws := c.DefaultQuery("query", "_")
+    cq := c.DefaultQuery("custom_query", "_")
     t := c.DefaultQuery("type", "_")
    
     chainId, hasChain := c.Get("ChainId")
@@ -84,7 +85,7 @@ func (u HandshakeController) Discover(c *gin.Context) {
     s = "sum(mul(def(shake_count_i,0), 8),mul(def(comment_count_i,0), 4),mul(def(view_count_i,0), 2),if(def(last_update_at_i, 0), div(last_update_at_i, 3000000), 0)) desc"
 
     // filter query
-    fq = fmt.Sprintf("is_private_i:0 AND chain_id_i:%d AND -init_user_id_i:%d", chainId, userModel.id) 
+    fq = fmt.Sprintf("is_private_i:0 AND chain_id_i:%d AND -init_user_id_i:%d", chainId, userModel.ID) 
 
     // query
     if kws != "_" {
@@ -104,7 +105,14 @@ func (u HandshakeController) Discover(c *gin.Context) {
         } else {
             q = search_text_search
         }
-        fmt.Println("kws", kws)
+    }
+
+    if cq != "_" {
+        if len(q) > 0 {
+            q = fmt.Sprintf("%s AND %s", q, cq)
+        } else {
+            q = cq
+        }
     }
 
     if t != "_" {
