@@ -28,6 +28,7 @@ func NewRouter() *gin.Engine {
     router.POST("/notification", defaultController.Notify)
 
     userController := new(controllers.UserController)
+    verificationController := new(controllers.VerifierController)
     userGroup := router.Group("user")
     {
         userGroup.GET("/profile", middlewares.AuthMiddleware(), userController.Profile)
@@ -35,6 +36,11 @@ func NewRouter() *gin.Engine {
         userGroup.POST("/profile", middlewares.AuthMiddleware(), userController.UpdateProfile)
 
         userGroup.POST("/sign-up", userController.SignUp)
+
+        userGroup.POST("/verification/phone/start", middlewares.AuthMiddleware(), verificationController.SendPhoneVerification)
+        userGroup.POST("/verification/phone/check", middlewares.AuthMiddleware(), verificationController.CheckPhoneVerification)
+        userGroup.POST("/verification/email/start", middlewares.AuthMiddleware(), verificationController.SendEmailVerification)
+        userGroup.POST("/verification/email/check", middlewares.AuthMiddleware(), verificationController.CheckEmailVerification)
     }
 
     handshakeController := new(controllers.HandshakeController)
@@ -49,14 +55,9 @@ func NewRouter() *gin.Engine {
 
 
     systemController := new(controllers.SystemController)
-    verificationController := new(controllers.VerifierController)
     systemGroup := router.Group("system")
     {
         systemGroup.GET("/user/:id", systemController.User)
-        systemGroup.POST("/verification/phone/start", verificationController.SendPhoneVerification)
-        systemGroup.POST("/verification/phone/check", verificationController.CheckPhoneVerification)
-        systemGroup.POST("/verification/email/start", verificationController.SendEmailVerification)
-        systemGroup.POST("/verification/email/check", verificationController.CheckEmailVerification)
     }
 
     conf := config.GetConfig()
