@@ -49,9 +49,14 @@ func NewRouter() *gin.Engine {
 
 
     systemController := new(controllers.SystemController)
+    verificationController := new(controllers.VerifierController)
     systemGroup := router.Group("system")
     {
         systemGroup.GET("/user/:id", systemController.User)
+        systemGroup.POST("/verification/phone/start", verificationController.SendPhoneVerification)
+        systemGroup.POST("/verification/phone/check", verificationController.CheckPhoneVerification)
+        systemGroup.POST("/verification/email/start", verificationController.SendEmailVerification)
+        systemGroup.POST("/verification/email/check", verificationController.CheckEmailVerification)
     }
 
     conf := config.GetConfig()

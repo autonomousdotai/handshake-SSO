@@ -1,5 +1,7 @@
 secret_key: abcd1234abcd1234abcd1234abcd1234
 db: root:123456@tcp(localhost:3306)/handshake?charset=utf8&parseTime=True&loc=Local
+twilio_key: xxx
+email_verification_url: http://handshake.ninja/email-verification
 forwarding:
     cryptosign: http://localhost:8081
     exchange: http://localhost:8082
@@ -11,3 +13,4 @@ services:
     ipfs: http://localhost:8087
     fcm: http://localhost:8089
     storage: http://localhost:8090
+    twilio: https://api.authy.com
