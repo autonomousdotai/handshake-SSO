@@ -4,26 +4,31 @@ import (
 	"github.com/ninjadotorg/handshake-dispatcher/utils"
 	"bytes"
 	"io/ioutil"
-	"net/url"
 	"net/http"
 	"fmt"
 	"encoding/json"
+	"mime/multipart"
 )
 
-type MailService struct {}
+type MailService struct{}
 
 func (s MailService) Send(from string, to string, subject string, content string) (success bool, err error) {
 	endpoint, _ := utils.GetServicesEndpoint("mail")
 
-	form := url.Values{
-		"from": {from},
-		"to[]": {to},
-		"subject": {subject},
-		"body": {content},
-	}
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+	part, _ := writer.CreateFormField("from")
+	part.Write([]byte(from))
+	part, _ = writer.CreateFormField("to[]")
+	part.Write([]byte(to))
+	part, _ = writer.CreateFormField("subject")
+	part.Write([]byte(subject))
+	part, _ = writer.CreateFormField("body")
+	part.Write([]byte(content))
+	writer.Close()
 
-	body := bytes.NewBufferString(form.Encode())
 	request, _ := http.NewRequest("POST", endpoint, body)
+	request.Header.Set("Content-Type", writer.FormDataContentType())
 
 	client := &http.Client{}
 	response, err := client.Do(request)
@@ -38,8 +43,8 @@ func (s MailService) Send(from string, to string, subject string, content string
 	json.Unmarshal(b, &data)
 
 	fmt.Println(data)
-
-	success = data["status"].(int) == 1
+	status, _ := data["status"].(float64)
+	success = status >= 1
 
 	return
 }

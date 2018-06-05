@@ -70,6 +70,7 @@ func (s VerifierController) SendEmailVerification(c *gin.Context) {
 
 	subject := "Email verification"
 	content := fmt.Sprintf(EMAIL_VERIFICATION_TEMPLATE, verificationUrl)
+
 	success, err := mailClient.Send(" shake@shake.ninja ", email, subject, content)
 
 	if err != nil || !success {
