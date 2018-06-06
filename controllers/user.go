@@ -142,6 +142,7 @@ func (u UserController) UpdateProfile(c *gin.Context) {
     dbErr := db.Save(&userModel).Error
 
     if dbErr != nil {
+        fmt.Println("Error", dbErr.Error())
         resp := JsonResponse{0, "Update profile failed.", nil}
         c.JSON(http.StatusOK, resp)
         c.Abort()
