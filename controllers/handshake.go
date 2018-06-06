@@ -34,7 +34,7 @@ func (u HandshakeController) Me(c *gin.Context) {
     var q, fq, s string
 
     // sort
-    s = "def(init_at_i, 0) desc"
+    s = "def(last_update_at_i, 0) desc"
 
     // query
     q = "id:*"
@@ -127,18 +127,27 @@ func (u HandshakeController) Discover(c *gin.Context) {
 
     if len(q) == 0 {
         // Exchange (2) type is special, it needs to query by location
-        q = "(id:* AND -type_i:2) OR (type_i:2 AND {!geofilt})"
+        if pt != "0,0" {
+            q = fmt.Sprintf("(id:* AND -type_i:2) OR (type_i:2 AND {!geofilt})", q)
+        } else {
+            q = "id:*"
+        }
     }
     // In case there is geofilt, add geodist sort condition
     if strings.Contains(q, "geofilt") {
         s += ", geodist() asc"
     }
 
-    data, err := solrService.List("handshake", q, fq, (page - 1) * LIMIT, LIMIT, s, &services.SolrSpatial{
-        Pt: pt,
-        SField: sfield,
-        D: d,
-    })
+    var ss *services.SolrSpatial
+    if pt != "0,0" {
+        ss = &services.SolrSpatial{
+            Pt: pt,
+            SField: sfield,
+            D: d,
+        }
+    }
+
+    data, err := solrService.List("handshake", q, fq, (page - 1) * LIMIT, LIMIT, s, ss)
     if err != nil {
         resp := JsonResponse{0, err.Error(), nil}
         c.JSON(http.StatusOK, resp)

@@ -39,9 +39,9 @@ func (s SolrService) List(t string, q string, fq string, offset int, limit int, 
     }
 
     if spatial != nil {
-        params["pt"] = spatial.Pt
-        params["sfield"] = spatial.SField
-        params["d"] = spatial.D
+        params["pt"] = []string{spatial.Pt}
+        params["sfield"] = []string{spatial.SField}
+        params["d"] = []string{spatial.D}
     }
 
     jsonData["Params"] = params
@@ -66,6 +66,8 @@ func (s SolrService) List(t string, q string, fq string, offset int, limit int, 
     }
 
     b, _ := ioutil.ReadAll(response.Body)
+
+    fmt.Println(string(b))
 
     var data map[string]interface{}
     json.Unmarshal(b, &data)
