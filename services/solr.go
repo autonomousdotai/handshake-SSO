@@ -10,13 +10,19 @@ import (
     "github.com/ninjadotorg/handshake-dispatcher/utils"
 )
 
+type SolrSpatial struct {
+    Pt string
+    SField string
+    D string
+}
+
 type SolrService struct {}
 
 func (s SolrService) Init() {
     
 }
 
-func (s SolrService) List(t string, q string, fq string, offset int, limit int, sort string) (map[string]interface{}, error) {
+func (s SolrService) List(t string, q string, fq string, offset int, limit int, sort string, spatial *SolrSpatial) (map[string]interface{}, error) {
     jsonData := make(map[string]interface{})
     
     params := make(map[string]interface{})
@@ -30,6 +36,12 @@ func (s SolrService) List(t string, q string, fq string, offset int, limit int, 
 
     if len(sort) > 0 {
         params["sort"] = []string{sort}
+    }
+
+    if spatial != nil {
+        params["pt"] = spatial.Pt
+        params["sfield"] = spatial.SField
+        params["d"] = spatial.D
     }
 
     jsonData["Params"] = params
