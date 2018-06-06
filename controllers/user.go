@@ -28,9 +28,19 @@ func (u UserController) SignUp(c *gin.Context) {
 
     // todo add new user with key
     db := models.Database()
-    user := models.User{UUID: UUID}
+    user := models.User{UUID: UUID, Username: UUID[len(UUID)-8:]}
 
     errDb := db.Create(&user).Error;
+
+    if errDb != nil {
+        resp := JsonResponse{0, "Sign up failed", nil}
+        c.JSON(http.StatusOK, resp)
+        return
+    }
+
+    user.Username = fmt.Sprintf("%s%d", UUID[len(UUID) - 8:], user.ID) 
+
+    errDb = db.Save(&user).Error
 
     if errDb != nil {
         resp := JsonResponse{0, "Sign up failed", nil}
