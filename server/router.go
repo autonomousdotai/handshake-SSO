@@ -32,6 +32,7 @@ func NewRouter() *gin.Engine {
     userGroup := router.Group("user")
     {
         userGroup.GET("/profile", middlewares.AuthMiddleware(), userController.Profile)
+        userGroup.GET("/username-exist", middlewares.AuthMiddleware(), userController.UsernameExist)
 
         userGroup.POST("/profile", middlewares.AuthMiddleware(), userController.UpdateProfile)
 

@@ -57,6 +57,36 @@ func (u UserController) Profile(c *gin.Context) {
     c.JSON(http.StatusOK, resp)
 }
 
+func (u UserController) UsernameExist(c *gin.Context) {
+    username := c.DefaultQuery("username", "_")
+
+    if username == "_" {
+        resp := JsonResponse{0, "Invalid Username", nil}
+        c.JSON(http.StatusOK, resp)
+        c.Abort()
+        return;
+    }
+
+    var userModel models.User 
+    user, _ := c.Get("User")
+    userModel = user.(models.User)
+
+    var _u models.User
+    errDb := models.Database().Where("username = ? AND id != ?", username, userModel.ID).First(&_u).Error
+  
+    var result bool
+
+    if errDb != nil {
+        fmt.Println("Error", errDb.Error())
+        result = false
+    } else {
+        result = true
+    }
+
+    resp := JsonResponse{1, "", result}
+    c.JSON(http.StatusOK, resp)
+}
+
 func (u UserController) UpdateProfile(c *gin.Context) {
     var userModel models.User
     
@@ -65,6 +95,7 @@ func (u UserController) UpdateProfile(c *gin.Context) {
     
     email := c.DefaultPostForm("email", "_")
     name := c.DefaultPostForm("name", "_")
+    username := c.DefaultPostForm("username", "_")
     rwas := c.DefaultPostForm("reward_wallet_addresses", "_")
     phone := c.DefaultPostForm("phone", "_")
     ft := c.DefaultPostForm("fcm_token", "_")
@@ -72,6 +103,9 @@ func (u UserController) UpdateProfile(c *gin.Context) {
     
     if email != "_" {
         userModel.Email = email
+    }
+    if username != "_" {
+        userModel.Username = username
     }
     if name != "_" {
         userModel.Name = name
