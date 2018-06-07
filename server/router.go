@@ -22,6 +22,7 @@ func NewRouter() *gin.Engine {
 	router.Use(gin.Logger())
 	router.Use(middlewares.CORSMiddleware())
 	router.Use(middlewares.ErrorHandler())
+	router.Use(middlewares.IpMiddleware())
 	router.Use(middlewares.ChainMiddleware())
 
 	defaultController := new(controllers.DefaultController)
@@ -116,7 +117,6 @@ func Forwarding(c *gin.Context, endpoint *interface{}, path string) {
 		for k, _ := range r.Header {
 			v := c.GetHeader(k)
 			req.Header.Set(k, v)
-			log.Printf("Header %s : %s", k, v)
 		}
 		req.Header.Set("Uid", strconv.FormatUint(uint64((user.(models.User)).ID), 10))
 		req.Header.Set("Fcm-Token", (user.(models.User)).FCMToken)
