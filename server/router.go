@@ -22,7 +22,7 @@ func NewRouter() *gin.Engine {
 	router.Use(gin.Logger())
 	router.Use(middlewares.CORSMiddleware())
 	router.Use(middlewares.ErrorHandler())
-	router.Use(middlewares.IpMiddleware())
+	// router.Use(middlewares.IpFilterMiddleware())
 	router.Use(middlewares.ChainMiddleware())
 
 	defaultController := new(controllers.DefaultController)
