@@ -14,7 +14,7 @@ func IpMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ipAddress := getIPAdress(c.Request)
 		log.Printf("Client IP : %s", ipAddress)
-		c.Set("IpAddress", ipAddress)
+		c.Set("Ip", ipAddress)
 		c.Next()
 	}
 }
