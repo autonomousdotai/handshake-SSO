@@ -21,7 +21,6 @@ func NewRouter() *gin.Engine {
 	router := gin.New()
 	router.Use(gin.Logger())
 	router.Use(middlewares.CORSMiddleware())
-	router.Use(middlewares.IpMiddleware())
 	router.Use(middlewares.ErrorHandler())
 	router.Use(middlewares.ChainMiddleware())
 
