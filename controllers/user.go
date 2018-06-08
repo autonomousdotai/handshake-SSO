@@ -257,7 +257,7 @@ func UserRequestRinkebyFreeEth(user models.User, metadata map[string]interface{}
 func RequestRinkebyFreeEth(userId uint, address string, value string) (bool, string) {
     endpoint, _ := utils.GetServicesEndpoint("ethereum")
     
-    endpoint = fmt.Sprintf("%s/rinkeby/free-ether?to_adress=%s&value=%s", endpoint, address, value)
+    endpoint = fmt.Sprintf("%s/rinkeby/free-ether?to_address=%s&value=%s", endpoint, address, value)
 
     request, _ := http.NewRequest("POST", endpoint, nil)
     request.Header.Set("Content-Type", "application/json")
