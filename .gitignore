@@ -4,6 +4,7 @@
 
 # ignore config
 config/*.yaml
+config/*.json
 
 vendor
 glide.lock
