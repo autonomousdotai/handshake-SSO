@@ -231,7 +231,7 @@ func ExchangeSignUp(userId uint) {
 
 func UserRequestRinkebyFreeEth(user models.User, metadata map[string]interface{}, address string) (bool, string) {
     value := "1"
-    status, hash := RequestRinkebyFreeEth(address, value)
+    status, hash := RequestRinkebyFreeEth(user.ID, address, value)
     
     if status {
         metadata["free-rinkeby"] = map[string]interface{}{
@@ -254,14 +254,14 @@ func UserRequestRinkebyFreeEth(user models.User, metadata map[string]interface{}
     }
 }
 
-func RequestRinkebyFreeEth(address string, value string) (bool, string) {
+func RequestRinkebyFreeEth(userId uint, address string, value string) (bool, string) {
     endpoint, _ := utils.GetServicesEndpoint("ethereum")
     
     endpoint = fmt.Sprintf("%s/rinkeby/free-ether?to_adress=%s&value=%s", endpoint, address, value)
 
     request, _ := http.NewRequest("POST", endpoint, nil)
     request.Header.Set("Content-Type", "application/json")
-    
+    request.Header.Set("Uid", fmt.Sprint(userId))
     client := &http.Client{}
     response, err := client.Do(request)
     if err != nil {
