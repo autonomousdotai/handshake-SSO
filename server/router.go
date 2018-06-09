@@ -29,6 +29,12 @@ func NewRouter() *gin.Engine {
     router.GET("/", defaultController.Home) 
     router.POST("/notification", defaultController.Notify)
 
+    nonceController := new(controllers.NonceController)
+    nonceGroup := router.Group("nonce")
+    {
+        nonceGroup.GET("/get", nonceController.Get)
+    }
+
     userController := new(controllers.UserController)
     verificationController := new(controllers.VerifierController)
     userGroup := router.Group("user")
