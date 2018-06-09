@@ -50,6 +50,16 @@ func (u NonceController) Get(c *gin.Context) {
         }
     } else {
         model.Nonce += 1
+        if nonce != "0" {
+            ni, err := strconv.Atoi(nonce)
+            if err != nil {
+                resp := JsonResponse{0, "Invalid nonce.", nil}
+                c.JSON(http.StatusOK, resp)
+                c.Abort()
+                return;
+            }
+            model.Nonce = ni + 1
+        }
         errDb := db.Save(&model).Error
 
         if errDb != nil {
