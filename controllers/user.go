@@ -5,6 +5,7 @@ import (
     "net/http"
     "bytes"
     "encoding/json"
+    "io/ioutil"
     "strings"
     "time"
     "github.com/gin-gonic/gin"
@@ -165,6 +166,42 @@ func (u UserController) UpdateProfile(c *gin.Context) {
     c.JSON(http.StatusOK, resp)
 }
 
+func (u UserController) FreeRinkebyEth(c *gin.Context) {  
+    var userModel models.User
+    user, _ := c.Get("User")
+    userModel = user.(models.User)
+   
+    address := c.DefaultQuery("address", "_")
+
+    if address == "_" {
+        resp := JsonResponse{0, "Invalid address", nil}
+        c.JSON(http.StatusOK, resp)
+        c.Abort()
+        return;
+    }
+
+    var status bool
+    var message string
+
+    if userModel.Metadata != "" { 
+        var md map[string]interface{}
+        json.Unmarshal([]byte(userModel.Metadata), &md)   
+        rinkeby, ok := md["free-rinkeby"]
+        if ok {
+            status = false
+            message = fmt.Sprintf("Your free eth transaction is %s", rinkeby.(map[string]interface{})["hash"])
+        } else {
+            status, message = UserRequestRinkebyFreeEth(userModel, md, address)
+        }
+    } else {
+        md := make(map[string]interface{})
+        status, message = UserRequestRinkebyFreeEth(userModel, md, address)
+    }
+   
+    resp := JsonResponse{1, message, status}
+    c.JSON(http.StatusOK, resp)
+}
+
 func (u UserController) ExportPassphrase(c *gin.Context) {
     resp := JsonResponse{1, "", "Export passpharse"}
     c.JSON(http.StatusOK, resp)
@@ -191,3 +228,60 @@ func ExchangeSignUp(userId uint) {
         fmt.Println("call exchange on SignUp success")
     }
 }
+
+func UserRequestRinkebyFreeEth(user models.User, metadata map[string]interface{}, address string) (bool, string) {
+    value := "1"
+    status, hash := RequestRinkebyFreeEth(user.ID, address, value)
+    
+    if status {
+        metadata["free-rinkeby"] = map[string]interface{}{
+            "address": address,
+            "value": value,
+            "hash": hash,
+            "time": time.Now().UTC().Unix(), 
+        }
+        
+        md, _ := json.Marshal(metadata)
+        user.Metadata = string(md)
+        dbErr := models.Database().Save(&user).Error
+        if dbErr != nil {
+            return false, dbErr.Error()
+        } else {
+            return true, ""
+        }
+    } else {
+        return false, hash
+    }
+}
+
+func RequestRinkebyFreeEth(userId uint, address string, value string) (bool, string) {
+    endpoint, _ := utils.GetServicesEndpoint("ethereum")
+    
+    endpoint = fmt.Sprintf("%s/rinkeby/free-ether?to_address=%s&value=%s", endpoint, address, value)
+
+    request, _ := http.NewRequest("POST", endpoint, nil)
+    request.Header.Set("Content-Type", "application/json")
+    request.Header.Set("Uid", fmt.Sprint(userId))
+    client := &http.Client{}
+    response, err := client.Do(request)
+    if err != nil {
+        fmt.Println(err.Error())
+        return false, err.Error()
+    }
+
+    b, _ := ioutil.ReadAll(response.Body)
+
+    var data map[string]interface{}
+    json.Unmarshal(b, &data)
+
+    status, ok := data["status"]
+    message, _ := data["message"]
+
+    if ok && (float64(1) == status) {
+        rData := data["data"].(map[string]interface{})
+        return true, rData["hash"].(string)
+    } else {
+        return false, message.(string)
+    }
+}
+

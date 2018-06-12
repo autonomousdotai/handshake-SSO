@@ -18,65 +18,72 @@ import (
 )
 
 func NewRouter() *gin.Engine {
-	router := gin.New()
-	router.Use(gin.Logger())
-	router.Use(middlewares.CORSMiddleware())
-	router.Use(middlewares.ErrorHandler())
-	// router.Use(middlewares.IpFilterMiddleware())
-	router.Use(middlewares.ChainMiddleware())
+    router := gin.New()
+    router.Use(gin.Logger())
+    router.Use(middlewares.CORSMiddleware())
+    router.Use(middlewares.ErrorHandler())
+    router.Use(middlewares.ChainMiddleware())
+    // router.Use(middlewares.IpFilterMiddleware())
 
-	defaultController := new(controllers.DefaultController)
-	router.GET("/", defaultController.Home)
-	router.POST("/notification", defaultController.Notify)
+    defaultController := new(controllers.DefaultController)
+    router.GET("/", defaultController.Home) 
+    router.POST("/notification", defaultController.Notify)
 
-	userController := new(controllers.UserController)
-	verificationController := new(controllers.VerifierController)
-	userGroup := router.Group("user")
-	{
-		userGroup.GET("/profile", middlewares.AuthMiddleware(), userController.Profile)
-		userGroup.GET("/username-exist", middlewares.AuthMiddleware(), userController.UsernameExist)
+    nonceController := new(controllers.NonceController)
+    nonceGroup := router.Group("nonce")
+    {
+        nonceGroup.GET("/get", nonceController.Get)
+        nonceGroup.POST("/set", nonceController.Set)
+    }
 
-		userGroup.POST("/profile", middlewares.AuthMiddleware(), userController.UpdateProfile)
+    userController := new(controllers.UserController)
+    verificationController := new(controllers.VerifierController)
+    userGroup := router.Group("user")
+    {
+        userGroup.GET("/profile", middlewares.AuthMiddleware(), userController.Profile)
+        userGroup.GET("/username-exist", middlewares.AuthMiddleware(), userController.UsernameExist)
+        userGroup.POST("/profile", middlewares.AuthMiddleware(), userController.UpdateProfile)
+        userGroup.POST("/sign-up", userController.SignUp)
+        userGroup.POST("/free-rinkeby-eth", middlewares.AuthMiddleware(), userController.FreeRinkebyEth)
 
-		userGroup.POST("/sign-up", userController.SignUp)
+        userGroup.POST("/verification/phone/start", middlewares.AuthMiddleware(), verificationController.SendPhoneVerification)
+        userGroup.POST("/verification/phone/check", middlewares.AuthMiddleware(), verificationController.CheckPhoneVerification)
+        userGroup.POST("/verification/email/start", verificationController.SendEmailVerification)
+        userGroup.POST("/verification/email/check", verificationController.CheckEmailVerification)
+    }
 
-		userGroup.POST("/verification/phone/start", middlewares.AuthMiddleware(), verificationController.SendPhoneVerification)
-		userGroup.POST("/verification/phone/check", middlewares.AuthMiddleware(), verificationController.CheckPhoneVerification)
-		userGroup.POST("/verification/email/start", verificationController.SendEmailVerification)
-		userGroup.POST("/verification/email/check", verificationController.CheckEmailVerification)
-	}
+    handshakeController := new(controllers.HandshakeController)
+    handshakeGroup := router.Group("handshake")
+    {
+        handshakeGroup.GET("/me", middlewares.AuthMiddleware(), handshakeController.Me)
+        handshakeGroup.GET("/discover", middlewares.AuthMiddleware(), handshakeController.Discover)
+        handshakeGroup.POST("/create", middlewares.AuthMiddleware(), handshakeController.Create)
+        handshakeGroup.POST("/update", middlewares.AuthMiddleware(), handshakeController.Update)
+        handshakeGroup.POST("/delete", middlewares.AuthMiddleware(), handshakeController.Delete)
+    }
 
-	handshakeController := new(controllers.HandshakeController)
-	handshakeGroup := router.Group("handshake")
-	{
-		handshakeGroup.GET("/me", middlewares.AuthMiddleware(), handshakeController.Me)
-		handshakeGroup.GET("/discover", middlewares.AuthMiddleware(), handshakeController.Discover)
-		handshakeGroup.POST("/create", middlewares.AuthMiddleware(), handshakeController.Create)
-		handshakeGroup.POST("/update", middlewares.AuthMiddleware(), handshakeController.Update)
-		handshakeGroup.POST("/delete", middlewares.AuthMiddleware(), handshakeController.Delete)
-	}
 
-	systemController := new(controllers.SystemController)
-	systemGroup := router.Group("system")
-	{
-		systemGroup.GET("/user/:id", systemController.User)
-	}
+    systemController := new(controllers.SystemController)
+    systemGroup := router.Group("system")
+    {
+        systemGroup.GET("/user/:id", systemController.User)
+    }
 
-	conf := config.GetConfig()
-	for ex, ep := range conf.GetStringMap("forwarding") {
-		endpoint := ep
-		router.Any(ex, middlewares.AuthMiddleware(), func(c *gin.Context) {
-			Forwarding(c, &endpoint, "")
-		})
-		router.Any(ex+"/*path", middlewares.AuthMiddleware(), func(c *gin.Context) {
-			path := c.Param("path")
-			Forwarding(c, &endpoint, path)
-		})
-	}
+    conf := config.GetConfig()
+    for ex, ep := range conf.GetStringMap("forwarding") { 
+        endpoint := ep
+        router.Any(ex, middlewares.AuthMiddleware(), func(c *gin.Context) {
+            Forwarding(c, &endpoint, "")
+        })
+        router.Any(ex + "/*path", middlewares.AuthMiddleware(), func(c *gin.Context) {
+            path := c.Param("path")
+            Forwarding(c, &endpoint, path)
+        })
+    }
 
-	router.NoRoute(defaultController.NotFound)
+    router.NoRoute(defaultController.NotFound)
 
-	return router
+    return router
 }
 
 type ForwardingTransport struct {
