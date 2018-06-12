@@ -33,6 +33,7 @@ func NewRouter() *gin.Engine {
     nonceGroup := router.Group("nonce")
     {
         nonceGroup.GET("/get", nonceController.Get)
+        nonceGroup.POST("/set", nonceController.Set)
     }
 
     userController := new(controllers.UserController)
