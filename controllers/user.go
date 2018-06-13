@@ -27,9 +27,20 @@ func (u UserController) SignUp(c *gin.Context) {
         return
     }
 
+    ref := c.Query("ref")
+
     // todo add new user with key
     db := models.Database()
     user := models.User{UUID: UUID, Username: UUID[len(UUID)-8:]}
+
+    if ref != "" {
+        refUser := models.User{}
+        refErr := db.Where("username = ?", ref).First(&refUser).Error
+
+        if refErr == nil {
+            user.RefID = refUser.ID
+        }
+    }
 
     errDb := db.Create(&user).Error;
 
@@ -42,7 +53,7 @@ func (u UserController) SignUp(c *gin.Context) {
     user.Username = fmt.Sprintf("%s%d", UUID[len(UUID) - 8:], user.ID) 
 
     errDb = db.Save(&user).Error
-
+    
     if errDb != nil {
         resp := JsonResponse{0, "Sign up failed", nil}
         c.JSON(http.StatusOK, resp)
@@ -199,6 +210,24 @@ func (u UserController) FreeRinkebyEth(c *gin.Context) {
     }
    
     resp := JsonResponse{1, message, status}
+    c.JSON(http.StatusOK, resp)
+}
+
+func (u UserController) Referred(c *gin.Context) {
+    var userModel models.User
+    var count int 
+
+    user, _ := c.Get("User")
+    userModel = user.(models.User)
+
+    db := models.Database()
+    errDb := db.Model(&models.User{}).Where("ref_id = ?", userModel.ID).Count(&count).Error
+   
+    if errDb != nil {
+        panic(errDb)
+    }
+    
+    resp := JsonResponse{1, "", count}
     c.JSON(http.StatusOK, resp)
 }
 

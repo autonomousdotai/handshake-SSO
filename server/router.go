@@ -45,6 +45,7 @@ func NewRouter() *gin.Engine {
         userGroup.POST("/profile", middlewares.AuthMiddleware(), userController.UpdateProfile)
         userGroup.POST("/sign-up", userController.SignUp)
         userGroup.POST("/free-rinkeby-eth", middlewares.AuthMiddleware(), userController.FreeRinkebyEth)
+        userGroup.GET("/referred", middlewares.AuthMiddleware(), userController.Referred)
 
         userGroup.POST("/verification/phone/start", middlewares.AuthMiddleware(), verificationController.SendPhoneVerification)
         userGroup.POST("/verification/phone/check", middlewares.AuthMiddleware(), verificationController.CheckPhoneVerification)

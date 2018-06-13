@@ -18,6 +18,7 @@ type User struct {
     RewardWalletAddresses string `gorm:"column:reward_wallet_addresses;size:1000" json:"reward_wallet_addresses"`
     Metadata string `gorm:"column:metadata;size:5000" json:"-"`
     FCMToken string `gorm:"column:fcm_token;size:200" json:"fcm_token"`
+    RefID uint `gorm:"column:ref_id;" json:"-"`
 }
 
 func (u User) TableName() string {
