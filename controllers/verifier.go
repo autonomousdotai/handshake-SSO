@@ -99,23 +99,21 @@ func (s VerifierController) CheckEmailVerification(c *gin.Context) {
 const EMAIL_VERIFICATION_TEMPLATE = `<html>
 <body>
 <p>
-    Hi,
+    Hey Ninja,
 </p>
 <p>
-    All you need to do is verify your email address. Click the following <a href="%s">link</a> to get started.
+    All you need to do is click the following link and your email will be verified.
+	<br><a href="%s">Verification Link</a>
 </p>
 <p>
-    If you have any questions just send an email to <a href="mailto:shake@shake.ninja">shake@shake.ninja</a>
-</p>
-<p>
-    Thanks,<br/>
+    Have fun in the dojo,<br/>
     Aliesha
 </p>
 <p>
     Shake | Ninja
 </p>
 <p>
-    Join the conversation at <a href="https://t.me/ninjadotorg">https://t.me/ninjadotorg</a>
+    Join the conversation at <a href="https://tme/ninja_org">https://tme/ninja_org</a>
 </p>
 </body>
 </html>
