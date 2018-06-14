@@ -126,16 +126,7 @@ func (u HandshakeController) Discover(c *gin.Context) {
     }
 
     if len(q) == 0 {
-        // Exchange (2) type is special, it needs to query by location
-        if pt != "0,0" {
-            q = fmt.Sprintf("(id:* AND -type_i:2) OR (type_i:2 AND {!geofilt})", q)
-        } else {
-            q = "id:*"
-        }
-    }
-    // In case there is geofilt, add geodist sort condition
-    if strings.Contains(q, "geofilt") {
-        s += ", geodist() asc"
+        q = "id:*"
     }
 
     var ss *services.SolrSpatial

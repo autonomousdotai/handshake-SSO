@@ -26,6 +26,12 @@ func (s SolrService) List(t string, q string, fq string, offset int, limit int, 
     jsonData := make(map[string]interface{})
     
     params := make(map[string]interface{})
+
+    if spatial != nil {
+        q = fmt.Sprintf("%s AND {!geofilt}", q)
+        sort = fmt.Sprintf("geodist() asc, %s", sort)
+    }
+
     if len(q) > 0 {
         params["q"] = []string{q} 
     }
