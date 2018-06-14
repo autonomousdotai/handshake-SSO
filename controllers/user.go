@@ -216,6 +216,7 @@ func (u UserController) FreeRinkebyEther(c *gin.Context) {
     if shouldRequest {
         value := "1"
         status, message := ethereumService.FreeEther(fmt.Sprint(userModel.ID), address, value, "rinkeby")
+        fmt.Println("DEBUG", status, message)
         if status {
             md["free-rinkeby"] = map[string]interface{}{
                 "address": address,
@@ -232,7 +233,8 @@ func (u UserController) FreeRinkebyEther(c *gin.Context) {
                 message = dbErr.Error()
             } else {
                 status = true
-            }   
+            } 
+            fmt.Println("DEBUG 2", status, message)
         }
     }
    
