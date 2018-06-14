@@ -196,6 +196,8 @@ func (u UserController) FreeRinkebyEther(c *gin.Context) {
     var md map[string]interface{}
     if userModel.Metadata != "" { 
         json.Unmarshal([]byte(userModel.Metadata), &md)   
+    } else {
+        md = map[string]interface{}{}
     }
 
 
