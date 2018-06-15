@@ -319,7 +319,7 @@ func afterUpdateProfile(userId string) {
                     if hasEthWallet {
                         log.Println("Yay, User has eth wallet.")
                         amount := "80"
-                        address := (ethWallet.(map[string]string))["address"]
+                        address := ((ethWallet.(map[string]interface{}))["address"]).(string)
                         status, hash := ethereumService.FreeToken(fmt.Sprint(user.ID), address, amount, "rinkeby")
                         log.Println("Receive token result", status, hash)
                         if status {
