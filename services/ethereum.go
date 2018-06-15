@@ -45,7 +45,7 @@ func (s EthereumService) FreeEther(userId string, to string, value string, netwo
 func (s EthereumService) FreeToken(userId string, to string, amount string, networkId string) (bool, string) {
 	endpoint, _ := utils.GetServicesEndpoint("ethereum")
 
-    endpoint = fmt.Sprintf("%s/free-ether?to_address=%s&amount=%s&network_id=%s", endpoint, to, amount, networkId)
+    endpoint = fmt.Sprintf("%s/free-token?to_address=%s&amount=%s&network_id=%s", endpoint, to, amount, networkId)
 
 	request, _ := http.NewRequest("POST", endpoint, nil)
 	request.Header.Set("Content-Type", "application/json")
