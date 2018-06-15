@@ -99,7 +99,7 @@ func (u UserController) UsernameExist(c *gin.Context) {
     var result bool
 
     if errDb != nil {
-        fmt.Println("Error", errDb.Error())
+        log.Println("Error", errDb.Error())
         result = false
     } else {
         result = true
@@ -164,7 +164,7 @@ func (u UserController) UpdateProfile(c *gin.Context) {
     dbErr := db.Save(&userModel).Error
 
     if dbErr != nil {
-        fmt.Println("Error", dbErr.Error())
+        log.Println("Error", dbErr.Error())
         resp := JsonResponse{0, "Update profile failed.", nil}
         c.JSON(http.StatusOK, resp)
         c.Abort()
@@ -173,7 +173,7 @@ func (u UserController) UpdateProfile(c *gin.Context) {
 
     userModel.UUID = ""
     
-    fmt.Println("go routine after update profile")
+    log.Println("go routine after update profile")
     go afterUpdateProfile(fmt.Sprint(userModel.ID))
 
     resp := JsonResponse{1, "", userModel}
@@ -269,7 +269,7 @@ func ExchangeSignUp(userId uint) {
     jsonData["id"] = userId
 
     endpoint, found := utils.GetForwardingEndpoint("exchange")
-    fmt.Println(endpoint, found)
+    log.Println(endpoint, found)
     jsonValue, _ := json.Marshal(jsonData)
   
     endpoint = fmt.Sprintf("%s/%s", endpoint, "user/profile")
@@ -280,21 +280,21 @@ func ExchangeSignUp(userId uint) {
     client := &http.Client{}
     _, err := client.Do(request)
     if err != nil {
-        fmt.Println("call exchange failed ", err)
+        log.Println("call exchange failed ", err)
     } else {
-        fmt.Println("call exchange on SignUp success")
+        log.Println("call exchange on SignUp success")
     }
 }
 
 func afterUpdateProfile(userId string) {
-    fmt.Println("Start after update profile", userId)
+    log.Println("Start after update profile", userId)
     user := models.User{}
     errDb := models.Database().Where("id = ?", userId).First(&user).Error
         
     if errDb != nil {
-        fmt.Println("Get user failed.")  
+        log.Println("Get user failed.")  
     } else {
-        fmt.Println("Retrieve user success.")
+        log.Println("Retrieve user success.")
         // valid user
         if user.Email != "" {
             var md map[string]interface{}
@@ -307,20 +307,20 @@ func afterUpdateProfile(userId string) {
             _, ok := md["complete-profile"]
             // not received token.
             if !ok {
-                fmt.Println("Yay, User don't receive token yet")
+                log.Println("Yay, User don't receive token yet")
                 var wallets map[string]interface{}
                 if user.RewardWalletAddresses != "" {
-                    fmt.Println("Yay, User have reward wallet address", user.RewardWalletAddresses)
+                    log.Println("Yay, User have reward wallet address", user.RewardWalletAddresses)
                     json.Unmarshal([]byte(user.RewardWalletAddresses), &wallets)
 
                     ethWallet, hasEthWallet := wallets["ETH"]
 
                     if hasEthWallet {
-                        fmt.Println("Yay, User has eth wallet.")
+                        log.Println("Yay, User has eth wallet.")
                         amount := "80"
                         address := (ethWallet.(map[string]string))["address"]
                         status, hash := ethereumService.FreeToken(fmt.Sprint(user.ID), address, amount, "rinkeby")
-                        fmt.Println("Receive token result", status, hash)
+                        log.Println("Receive token result", status, hash)
                         if status {
                             md["complete-profile"] = map[string]interface{}{
                                 "address": address,
@@ -333,14 +333,14 @@ func afterUpdateProfile(userId string) {
                             user.Metadata = string(metadata)
                             dbErr := models.Database().Save(&user).Error
                             if dbErr != nil {
-                                fmt.Println(dbErr.Error())
+                                log.Println(dbErr.Error())
                             } else {
                                 if user.RefID != 0 {
                                     ref := models.User{}
                                     errDb := models.Database().Where("id = ?", user.RefID).First(&ref).Error
 
                                     if errDb != nil {
-                                        fmt.Println("Get user failed.")  
+                                        log.Println("Get user failed.")  
                                     } else {
                                         var refMd map[string]interface{}
                                         if ref.Metadata != "" { 
@@ -384,7 +384,7 @@ func afterUpdateProfile(userId string) {
                                                         ref.Metadata = string(metadata)
                                                         dbErr := models.Database().Save(&ref).Error
                                                         if dbErr != nil {
-                                                            fmt.Println(dbErr.Error())
+                                                            log.Println(dbErr.Error())
                                                         }
                                                     }
                                                 }
