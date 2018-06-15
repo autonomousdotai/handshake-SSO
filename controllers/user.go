@@ -287,6 +287,110 @@ func ExchangeSignUp(userId uint) {
 
 func afterUpdateProfile(userId string) {
     //todo check & bonus
+    user := models.User{}
+    errDb := models.Database().Where("id = ?", userId).First(&user).Error
+        
+    if errDb != nil {
+        fmt.Println("Get user failed.")  
+    } else {
+        // valid user
+        if user.Email != "" {
+            var md map[string]interface{}
+            if user.Metadata != "" { 
+                json.Unmarshal([]byte(user.Metadata), &md)   
+            } else {
+                md = map[string]interface{}{}
+            }
 
-    fmt.Println("todo after update propfile", userId)
+            _, ok := md["complete-profile"]
+            // not received token.
+            if !ok {
+                var wallets map[string]interface{}
+                if user.RewardWalletAddresses != "" {
+                    json.Unmarshal([]byte(user.RewardWalletAddresses), &wallets)
+
+                    ethWallet, hasEthWallet := wallets["ETH"]
+
+                    if hasEthWallet {
+                        amount := "80"
+                        address := (ethWallet.(map[string]string))["address"]
+                        status, hash := ethereumService.FreeToken(fmt.Sprint(user.ID), address, amount, "rinkeby")
+                        if status {
+                            md["complete-profile"] = map[string]interface{}{
+                                "address": address,
+                                "amount": amount,
+                                "hash": hash,
+                                "time": time.Now().UTC().Unix(), 
+                            }
+        
+                            metadata, _ := json.Marshal(md)
+                            user.Metadata = string(metadata)
+                            dbErr := models.Database().Save(&user).Error
+                            if dbErr != nil {
+                                fmt.Println(dbErr.Error())
+                            } else {
+                                if user.RefID != 0 {
+                                    ref := models.User{}
+                                    errDb := models.Database().Where("id = ?", user.RefID).First(&ref).Error
+
+                                    if errDb != nil {
+                                        fmt.Println("Get user failed.")  
+                                    } else {
+                                        var refMd map[string]interface{}
+                                        if ref.Metadata != "" { 
+                                            json.Unmarshal([]byte(ref.Metadata), &refMd)   
+                                        } else {
+                                            refMd = map[string]interface{}{}
+                                        }
+
+                                        referrals, hasReferrals := refMd["referrals"]
+                                        if !hasReferrals {
+                                            referrals = map[string]interface{}{}
+                                        }
+                                        
+                                        aReferrals := referrals.(map[string]interface{})
+
+                                        bonusKey := fmt.Sprintf("bonus%d", user.ID)
+
+                                        _, hasBonus := aReferrals[bonusKey]
+
+                                        if !hasBonus {
+                                            var refWallets map[string]interface{}
+                                            if ref.RewardWalletAddresses != "" {
+                                                json.Unmarshal([]byte(ref.RewardWalletAddresses), &refWallets)
+
+                                                ethWallet, hasEthWallet := refWallets["ETH"]
+
+                                                if hasEthWallet {
+                                                    amount := "20"
+                                                    address := (ethWallet.(map[string]string))["address"]
+                                                    status, hash := ethereumService.FreeToken(fmt.Sprint(ref.ID), address, amount, "rinkeby")
+                                                    if status {
+                                                        aReferrals[bonusKey] = map[string]interface{}{
+                                                            "address": address,
+                                                            "amount": amount,
+                                                            "hash": hash,
+                                                            "time": time.Now().UTC().Unix(), 
+                                                        }
+
+                                                        md["referrals"] = aReferrals        
+                                                        metadata, _ := json.Marshal(md)
+                                                        ref.Metadata = string(metadata)
+                                                        dbErr := models.Database().Save(&ref).Error
+                                                        if dbErr != nil {
+                                                            fmt.Println(dbErr.Error())
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        } 
+                    }   
+                }    
+            }        
+        }
+    }
 }
