@@ -172,7 +172,8 @@ func (u UserController) UpdateProfile(c *gin.Context) {
     }
 
     userModel.UUID = ""
-
+    
+    fmt.Println("go routine after update profile")
     go afterUpdateProfile(fmt.Sprint(userModel.ID))
 
     resp := JsonResponse{1, "", userModel}
@@ -286,7 +287,7 @@ func ExchangeSignUp(userId uint) {
 }
 
 func afterUpdateProfile(userId string) {
-    fmt.Println("Start after update profile %s", userId)
+    fmt.Println("Start after update profile", userId)
     user := models.User{}
     errDb := models.Database().Where("id = ?", userId).First(&user).Error
         
