@@ -286,13 +286,14 @@ func ExchangeSignUp(userId uint) {
 }
 
 func afterUpdateProfile(userId string) {
-    //todo check & bonus
+    fmt.Println("Start after update profile %s", userId)
     user := models.User{}
     errDb := models.Database().Where("id = ?", userId).First(&user).Error
         
     if errDb != nil {
         fmt.Println("Get user failed.")  
     } else {
+        fmt.Println("Retrieve user success.")
         // valid user
         if user.Email != "" {
             var md map[string]interface{}
@@ -305,16 +306,20 @@ func afterUpdateProfile(userId string) {
             _, ok := md["complete-profile"]
             // not received token.
             if !ok {
+                fmt.Println("Yay, User don't receive token yet")
                 var wallets map[string]interface{}
                 if user.RewardWalletAddresses != "" {
+                    fmt.Println("Yay, User have reward wallet address", user.RewardWalletAddresses)
                     json.Unmarshal([]byte(user.RewardWalletAddresses), &wallets)
 
                     ethWallet, hasEthWallet := wallets["ETH"]
 
                     if hasEthWallet {
+                        fmt.Println("Yay, User has eth wallet.")
                         amount := "80"
                         address := (ethWallet.(map[string]string))["address"]
                         status, hash := ethereumService.FreeToken(fmt.Sprint(user.ID), address, amount, "rinkeby")
+                        fmt.Println("Receive token result", status, hash)
                         if status {
                             md["complete-profile"] = map[string]interface{}{
                                 "address": address,
