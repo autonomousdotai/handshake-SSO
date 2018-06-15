@@ -1,6 +1,7 @@
 package controllers
 
 import (
+    "log"
     "fmt"
     "net/http"
     "bytes"
