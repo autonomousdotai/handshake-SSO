@@ -404,7 +404,6 @@ func FreeTokenReferrer(userId string, refId string, network string) {
         }
         
         log.Println(refMd)
-        /*
         referrals, hasReferrals := refMd["referrals"]
         if !hasReferrals {
             referrals = map[string]interface{}{}
@@ -412,7 +411,7 @@ func FreeTokenReferrer(userId string, refId string, network string) {
         
         aReferrals := referrals.(map[string]interface{})
 
-        bonusKey := fmt.Sprintf("bonus%d", userId)
+        bonusKey := fmt.Sprintf("bonus%s", userId)
        
         log.Println(aReferrals, bonusKey)
         
@@ -420,7 +419,6 @@ func FreeTokenReferrer(userId string, refId string, network string) {
         log.Println("DEBUG 1")
         if !hasBonus {
             log.Println("start free token referrer 3", userId, refId, network)
-            /*  
             var refWallets map[string]interface{}
             if ref.RewardWalletAddresses != "" {
                 log.Println("start free token referrer 4", userId, refId, network)
@@ -453,6 +451,5 @@ func FreeTokenReferrer(userId string, refId string, network string) {
                 }
             }
         }
-        */
     }
 }
