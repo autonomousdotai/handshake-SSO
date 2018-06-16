@@ -241,7 +241,7 @@ func (u UserController) FreeRinkebyEther(c *gin.Context) {
     c.JSON(http.StatusOK, resp)
 }
 
-func completeProfile(c *gin.Context) {
+func (u UserController) CompleteProfile(c *gin.Context) {
     var status bool 
     var message string
     var user models.User
