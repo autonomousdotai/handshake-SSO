@@ -402,7 +402,9 @@ func FreeTokenReferrer(userId string, refId string, network string) {
         } else {
             refMd = map[string]interface{}{}
         }
-
+        
+        log.Println(refMd)
+        /*
         referrals, hasReferrals := refMd["referrals"]
         if !hasReferrals {
             referrals = map[string]interface{}{}
@@ -450,7 +452,7 @@ func FreeTokenReferrer(userId string, refId string, network string) {
                     }
                 }
             }
-            */
         }
+        */
     }
 }
