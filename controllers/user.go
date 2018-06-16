@@ -395,7 +395,6 @@ func FreeTokenReferrer(userId string, refId string, network string) {
     if errDb != nil {
         log.Println("Get referrer failed.")  
     } else {
-        log.Println("start free token referrer 2", userId, refId, network)
         var refMd map[string]interface{}
         if ref.Metadata != "" { 
             json.Unmarshal([]byte(ref.Metadata), &refMd)   
@@ -403,7 +402,6 @@ func FreeTokenReferrer(userId string, refId string, network string) {
             refMd = map[string]interface{}{}
         }
         
-        log.Println(refMd)
         referrals, hasReferrals := refMd["referrals"]
         if !hasReferrals {
             referrals = map[string]interface{}{}
@@ -412,28 +410,21 @@ func FreeTokenReferrer(userId string, refId string, network string) {
         aReferrals := referrals.(map[string]interface{})
 
         bonusKey := fmt.Sprintf("bonus%s", userId)
-       
-        log.Println(aReferrals, bonusKey)
         
         _, hasBonus := aReferrals[bonusKey]
-        log.Println("DEBUG 1")
         if !hasBonus {
-            log.Println("start free token referrer 3", userId, refId, network)
             var refWallets map[string]interface{}
             if ref.RewardWalletAddresses != "" {
-                log.Println("start free token referrer 4", userId, refId, network)
                 json.Unmarshal([]byte(ref.RewardWalletAddresses), &refWallets)
 
                 ethWallet, hasEthWallet := refWallets["ETH"]
 
                 if hasEthWallet {
-                    log.Println("start free token referrer 5", userId, refId, network, ethWallet)
                     amount := "20"
                     address := ((ethWallet.(map[string]interface{}))["address"]).(string)
                     status, hash := ethereumService.FreeToken(fmt.Sprint(ref.ID), address, amount, network)
                     log.Println("status", status, hash)
                     if status {
-                        log.Println("start free token referrer 6", userId, refId, network)
                         aReferrals[bonusKey] = map[string]interface{}{
                             "address": address,
                             "amount": amount,
