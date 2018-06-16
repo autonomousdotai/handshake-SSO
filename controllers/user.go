@@ -299,15 +299,11 @@ func (u UserController) CompleteProfile(c *gin.Context) {
                             log.Println(dbErr.Error())
                             message = fmt.Sprintf("Complete Profile Token fail: %s", hash)
                         } else {
-                            log.Println("Start referrer")
                             status = true
-                            message = fmt.Sprintf("Your complete profile token transaction is %s", completeProfile.(map[string]interface{})["hash"])
-                            log.Println("Start referrer 1")
+                            message = fmt.Sprintf("Your complete profile token transaction is %s", hash)
                             if user.RefID != 0 {
-                                log.Println("Start referrer 2")
                                 go freeTokenReferrer(fmt.Sprint(user.ID), fmt.Sprint(user.RefID), network); 
                             }
-                            log.Println("Start referrer 3")
                         }
                     } else {
                         message = fmt.Sprintf("Complete Profile Token fail: %s", hash)
