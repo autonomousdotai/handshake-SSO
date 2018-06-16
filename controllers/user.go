@@ -413,9 +413,9 @@ func FreeTokenReferrer(userId string, refId string, network string) {
         bonusKey := fmt.Sprintf("bonus%d", userId)
        
         log.Println(aReferrals, bonusKey)
-        /*
+        
         _, hasBonus := aReferrals[bonusKey]
-
+        log.Println("DEBUG 1")
         if !hasBonus {
             log.Println("start free token referrer 3", userId, refId, network)
             var refWallets map[string]interface{}
@@ -450,6 +450,5 @@ func FreeTokenReferrer(userId string, refId string, network string) {
                 }
             }
         }
-        */
     }
 }
