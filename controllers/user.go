@@ -418,6 +418,7 @@ func FreeTokenReferrer(userId string, refId string, network string) {
         log.Println("DEBUG 1")
         if !hasBonus {
             log.Println("start free token referrer 3", userId, refId, network)
+            /*  
             var refWallets map[string]interface{}
             if ref.RewardWalletAddresses != "" {
                 log.Println("start free token referrer 4", userId, refId, network)
@@ -427,7 +428,6 @@ func FreeTokenReferrer(userId string, refId string, network string) {
 
                 if hasEthWallet {
                     log.Println("start free token referrer 5", userId, refId, network, ethWallet)
-                    /*
                     amount := "20"
                     address := ((ethWallet.(map[string]interface{}))["address"]).(string)
                     status, hash := ethereumService.FreeToken(fmt.Sprint(ref.ID), address, amount, network)
@@ -448,9 +448,9 @@ func FreeTokenReferrer(userId string, refId string, network string) {
                             log.Println(dbErr.Error())
                         }
                     }
-                    */
                 }
             }
+            */
         }
     }
 }
