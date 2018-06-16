@@ -175,7 +175,6 @@ func (u UserController) UpdateProfile(c *gin.Context) {
     userModel.UUID = ""
     
     log.Println("go routine after update profile")
-    go afterUpdateProfile(fmt.Sprint(userModel.ID))
 
     resp := JsonResponse{1, "", userModel}
     c.JSON(http.StatusOK, resp)
@@ -242,21 +241,117 @@ func (u UserController) FreeRinkebyEther(c *gin.Context) {
     c.JSON(http.StatusOK, resp)
 }
 
-func (u UserController) Referred(c *gin.Context) {
-    var userModel models.User
-    var count int 
+func completeProfile(c *gin.Context) {
+    var status bool 
+    var message string
+    var user models.User
 
-    user, _ := c.Get("User")
-    userModel = user.(models.User)
+    userModel, _ := c.Get("User")
+    user = userModel.(models.User)
 
-    db := models.Database()
-    errDb := db.Model(&models.User{}).Where("ref_id = ?", userModel.ID).Count(&count).Error
-   
-    if errDb != nil {
-        panic(errDb)
-    }
+    config := config.GetConfig()
     
-    resp := JsonResponse{1, "", count}
+    env := config.GetString("env")
+    network := "rinkeby"
+    if env == "prod" {
+        network = "mainnet"
+    }
+
+    log.Println("Start after update profile", user.ID)
+ 
+    status = false
+    // valid user
+    if user.Email != "" {
+        var md map[string]interface{}
+        if user.Metadata != "" { 
+            json.Unmarshal([]byte(user.Metadata), &md)   
+        } else {
+            md = map[string]interface{}{}
+        }
+
+        completeProfile, ok := md["complete-profile"]
+        // not received token.
+        if !ok {
+            log.Println("Yay, User don't receive token yet")
+            var wallets map[string]interface{}
+            if user.RewardWalletAddresses != "" {
+                log.Println("Yay, User have reward wallet address", user.RewardWalletAddresses)
+                json.Unmarshal([]byte(user.RewardWalletAddresses), &wallets)
+
+                ethWallet, hasEthWallet := wallets["ETH"]
+
+                if hasEthWallet {
+                    log.Println("Yay, User has eth wallet.")
+                    amount := "80"
+                    address := ((ethWallet.(map[string]interface{}))["address"]).(string)
+                    status, hash := ethereumService.FreeToken(fmt.Sprint(user.ID), address, amount, network)
+                    log.Println("Receive token result", status, hash)
+                    if status {
+                        md["complete-profile"] = map[string]interface{}{
+                            "address": address,
+                            "amount": amount,
+                            "hash": hash,
+                            "time": time.Now().UTC().Unix(), 
+                        }
+    
+                        metadata, _ := json.Marshal(md)
+                        user.Metadata = string(metadata)
+                        dbErr := models.Database().Save(&user).Error
+                        if dbErr != nil {
+                            log.Println(dbErr.Error())
+                            message = fmt.Sprintf("Complete Profile Token fail: %s", hash)
+                        } else {
+                            status = true
+                            message = fmt.Sprintf("Your complete profile token transaction is %s", completeProfile.(map[string]interface{})["hash"])
+                            if user.RefID != 0 {
+                                go freeTokenReferrer(fmt.Sprint(user.ID), fmt.Sprint(user.RefID), network); 
+                            }
+                        }
+                    } else {
+                        message = fmt.Sprintf("Complete Profile Token fail: %s", hash)
+                    }
+                } else {
+                    message = "User does not have ETH reward wallet"
+                }
+            } else {
+                message = "User is not updated reward wallet addresses"
+            }
+        } else {
+            message = fmt.Sprintf("Your complete profile token transaction is %s", completeProfile.(map[string]interface{})["hash"])
+        }
+    } else {
+        message = "User is not complete profile yet"
+    }
+
+    resp := JsonResponse{1, message, status}
+    c.JSON(http.StatusOK, resp)
+}
+
+func (u UserController) Referred(c *gin.Context) {
+    var user models.User
+    var data map[string]interface{}
+    data["total"] = 0
+    data["amount"] = 0
+
+    userModel, _ := c.Get("User")
+    user = userModel.(models.User)
+
+    var md map[string]interface{}
+    if user.Metadata != "" { 
+        json.Unmarshal([]byte(user.Metadata), &md)   
+    } else {
+        md = map[string]interface{}{}
+    }
+
+    referrals, ok := md["referrals"]
+    
+    if ok {
+        referralsArray := referrals.([]map[string]interface{})
+        data["total"] = len(referralsArray)
+        data["amount"] = len(referralsArray) * 20
+    }
+
+    resp := JsonResponse{1, "", data}
     c.JSON(http.StatusOK, resp)
 }
 
@@ -287,117 +382,60 @@ func ExchangeSignUp(userId uint) {
     }
 }
 
-func afterUpdateProfile(userId string) {
-    log.Println("Start after update profile", userId)
-    user := models.User{}
-    errDb := models.Database().Where("id = ?", userId).First(&user).Error
-        
+func freeTokenReferrer(userId string, refId string, network string) {
+    ref := models.User{}
+    errDb := models.Database().Where("id = ?", refId).First(&ref).Error
+
     if errDb != nil {
-        log.Println("Get user failed.")  
+        log.Println("Get referrer failed.")  
     } else {
-        log.Println("Retrieve user success.")
-        // valid user
-        if user.Email != "" {
-            var md map[string]interface{}
-            if user.Metadata != "" { 
-                json.Unmarshal([]byte(user.Metadata), &md)   
-            } else {
-                md = map[string]interface{}{}
-            }
+        var refMd map[string]interface{}
+        if ref.Metadata != "" { 
+            json.Unmarshal([]byte(ref.Metadata), &refMd)   
+        } else {
+            refMd = map[string]interface{}{}
+        }
 
-            _, ok := md["complete-profile"]
-            // not received token.
-            if !ok {
-                log.Println("Yay, User don't receive token yet")
-                var wallets map[string]interface{}
-                if user.RewardWalletAddresses != "" {
-                    log.Println("Yay, User have reward wallet address", user.RewardWalletAddresses)
-                    json.Unmarshal([]byte(user.RewardWalletAddresses), &wallets)
-
-                    ethWallet, hasEthWallet := wallets["ETH"]
-
-                    if hasEthWallet {
-                        log.Println("Yay, User has eth wallet.")
-                        amount := "80"
-                        address := ((ethWallet.(map[string]interface{}))["address"]).(string)
-                        status, hash := ethereumService.FreeToken(fmt.Sprint(user.ID), address, amount, "rinkeby")
-                        log.Println("Receive token result", status, hash)
-                        if status {
-                            md["complete-profile"] = map[string]interface{}{
-                                "address": address,
-                                "amount": amount,
-                                "hash": hash,
-                                "time": time.Now().UTC().Unix(), 
-                            }
+        referrals, hasReferrals := refMd["referrals"]
+        if !hasReferrals {
+            referrals = map[string]interface{}{}
+        }
         
-                            metadata, _ := json.Marshal(md)
-                            user.Metadata = string(metadata)
-                            dbErr := models.Database().Save(&user).Error
-                            if dbErr != nil {
-                                log.Println(dbErr.Error())
-                            } else {
-                                if user.RefID != 0 {
-                                    ref := models.User{}
-                                    errDb := models.Database().Where("id = ?", user.RefID).First(&ref).Error
+        aReferrals := referrals.(map[string]interface{})
 
-                                    if errDb != nil {
-                                        log.Println("Get user failed.")  
-                                    } else {
-                                        var refMd map[string]interface{}
-                                        if ref.Metadata != "" { 
-                                            json.Unmarshal([]byte(ref.Metadata), &refMd)   
-                                        } else {
-                                            refMd = map[string]interface{}{}
-                                        }
+        bonusKey := fmt.Sprintf("bonus%d", userId)
 
-                                        referrals, hasReferrals := refMd["referrals"]
-                                        if !hasReferrals {
-                                            referrals = map[string]interface{}{}
-                                        }
-                                        
-                                        aReferrals := referrals.(map[string]interface{})
+        _, hasBonus := aReferrals[bonusKey]
 
-                                        bonusKey := fmt.Sprintf("bonus%d", user.ID)
+        if !hasBonus {
+            var refWallets map[string]interface{}
+            if ref.RewardWalletAddresses != "" {
+                json.Unmarshal([]byte(ref.RewardWalletAddresses), &refWallets)
 
-                                        _, hasBonus := aReferrals[bonusKey]
+                ethWallet, hasEthWallet := refWallets["ETH"]
 
-                                        if !hasBonus {
-                                            var refWallets map[string]interface{}
-                                            if ref.RewardWalletAddresses != "" {
-                                                json.Unmarshal([]byte(ref.RewardWalletAddresses), &refWallets)
+                if hasEthWallet {
+                    amount := "20"
+                    address := (ethWallet.(map[string]string))["address"]
+                    status, hash := ethereumService.FreeToken(fmt.Sprint(ref.ID), address, amount, network)
+                    if status {
+                        aReferrals[bonusKey] = map[string]interface{}{
+                            "address": address,
+                            "amount": amount,
+                            "hash": hash,
+                            "time": time.Now().UTC().Unix(), 
+                        }
 
-                                                ethWallet, hasEthWallet := refWallets["ETH"]
-
-                                                if hasEthWallet {
-                                                    amount := "20"
-                                                    address := (ethWallet.(map[string]string))["address"]
-                                                    status, hash := ethereumService.FreeToken(fmt.Sprint(ref.ID), address, amount, "rinkeby")
-                                                    if status {
-                                                        aReferrals[bonusKey] = map[string]interface{}{
-                                                            "address": address,
-                                                            "amount": amount,
-                                                            "hash": hash,
-                                                            "time": time.Now().UTC().Unix(), 
-                                                        }
-
-                                                        md["referrals"] = aReferrals        
-                                                        metadata, _ := json.Marshal(md)
-                                                        ref.Metadata = string(metadata)
-                                                        dbErr := models.Database().Save(&ref).Error
-                                                        if dbErr != nil {
-                                                            log.Println(dbErr.Error())
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        } 
-                    }   
-                }    
-            }        
+                        refMd["referrals"] = aReferrals        
+                        metadata, _ := json.Marshal(refMd)
+                        ref.Metadata = string(metadata)
+                        dbErr := models.Database().Save(&ref).Error
+                        if dbErr != nil {
+                            log.Println(dbErr.Error())
+                        }
+                    }
+                }
+            }
         }
     }
 }
