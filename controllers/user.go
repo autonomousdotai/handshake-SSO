@@ -431,6 +431,7 @@ func FreeTokenReferrer(userId string, refId string, network string) {
                     amount := "20"
                     address := ((ethWallet.(map[string]interface{}))["address"]).(string)
                     status, hash := ethereumService.FreeToken(fmt.Sprint(ref.ID), address, amount, network)
+                    log.Println("status", status, hash)
                     if status {
                         log.Println("start free token referrer 6", userId, refId, network)
                         aReferrals[bonusKey] = map[string]interface{}{
@@ -447,6 +448,7 @@ func FreeTokenReferrer(userId string, refId string, network string) {
                         if dbErr != nil {
                             log.Println(dbErr.Error())
                         }
+                        log.Println(ref)
                     }
                 }
             }
