@@ -282,9 +282,9 @@ func (u UserController) CompleteProfile(c *gin.Context) {
                     log.Println("Yay, User has eth wallet.")
                     amount := "80"
                     address := ((ethWallet.(map[string]interface{}))["address"]).(string)
-                    status, hash := ethereumService.FreeToken(fmt.Sprint(user.ID), address, amount, network)
+                    tokenStatus, hash := ethereumService.FreeToken(fmt.Sprint(user.ID), address, amount, network)
                     log.Println("Receive token result", status, hash)
-                    if status {
+                    if tokenStatus {
                         md["complete-profile"] = map[string]interface{}{
                             "address": address,
                             "amount": amount,
