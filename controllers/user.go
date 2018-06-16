@@ -329,9 +329,10 @@ func completeProfile(c *gin.Context) {
 
 func (u UserController) Referred(c *gin.Context) {
     var user models.User
-    var data map[string]interface{}
-    data["total"] = 0
-    data["amount"] = 0
+    data := map[string]interface{}{
+        "total":0,
+        "amount":0,
+    }
 
     userModel, _ := c.Get("User")
     user = userModel.(models.User)
