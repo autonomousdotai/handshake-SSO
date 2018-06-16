@@ -53,7 +53,7 @@ func (u UserController) SignUp(c *gin.Context) {
         }
     }
 
-    errDb := db.Create(&user).Error;
+    errDb := db.Create(&user).Error
 
     if errDb != nil {
         resp := JsonResponse{0, "Sign up failed", nil}
@@ -308,7 +308,7 @@ func (u UserController) CompleteProfile(c *gin.Context) {
                             message = fmt.Sprintf("Your complete profile token transaction is %s", hash)
                             if user.RefID != 0 {
                                 log.Println("This user has referrer", user.RefID)
-                                go FreeTokenReferrer(fmt.Sprint(user.ID), fmt.Sprint(user.RefID), network) 
+                                //go FreeTokenReferrer(fmt.Sprint(user.ID), fmt.Sprint(user.RefID), network) 
                             }
                         }
                     } else {
