@@ -411,7 +411,8 @@ func FreeTokenReferrer(userId string, refId string, network string) {
         aReferrals := referrals.(map[string]interface{})
 
         bonusKey := fmt.Sprintf("bonus%d", userId)
-        
+       
+        log.Println(aReferrals, bonusKey)
         /*
         _, hasBonus := aReferrals[bonusKey]
 
