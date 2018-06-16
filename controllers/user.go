@@ -305,6 +305,7 @@ func (u UserController) CompleteProfile(c *gin.Context) {
                             status = true
                             message = fmt.Sprintf("Your complete profile token transaction is %s", hash)
                             if user.RefID != 0 {
+                                log.Println("This use has referrer", user.RefID)
                                 go freeTokenReferrer(fmt.Sprint(user.ID), fmt.Sprint(user.RefID), network); 
                             }
                         }
