@@ -385,12 +385,14 @@ func ExchangeSignUp(userId uint) {
 }
 
 func freeTokenReferrer(userId string, refId string, network string) {
+    log.Println("start free token referrer", userId, refId, network)
     ref := models.User{}
     errDb := models.Database().Where("id = ?", refId).First(&ref).Error
 
     if errDb != nil {
         log.Println("Get referrer failed.")  
     } else {
+        log.Println("start free token referrer 2", userId, refId, network)
         var refMd map[string]interface{}
         if ref.Metadata != "" { 
             json.Unmarshal([]byte(ref.Metadata), &refMd)   
@@ -410,17 +412,21 @@ func freeTokenReferrer(userId string, refId string, network string) {
         _, hasBonus := aReferrals[bonusKey]
 
         if !hasBonus {
+            log.Println("start free token referrer 3", userId, refId, network)
             var refWallets map[string]interface{}
             if ref.RewardWalletAddresses != "" {
+                log.Println("start free token referrer 4", userId, refId, network)
                 json.Unmarshal([]byte(ref.RewardWalletAddresses), &refWallets)
 
                 ethWallet, hasEthWallet := refWallets["ETH"]
 
                 if hasEthWallet {
+                    log.Println("start free token referrer 5", userId, refId, network)
                     amount := "20"
                     address := (ethWallet.(map[string]string))["address"]
                     status, hash := ethereumService.FreeToken(fmt.Sprint(ref.ID), address, amount, network)
                     if status {
+                        log.Println("start free token referrer 6", userId, refId, network)
                         aReferrals[bonusKey] = map[string]interface{}{
                             "address": address,
                             "amount": amount,
