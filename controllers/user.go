@@ -307,8 +307,8 @@ func (u UserController) CompleteProfile(c *gin.Context) {
                             status = true
                             message = fmt.Sprintf("Your complete profile token transaction is %s", hash)
                             if user.RefID != 0 {
-                                log.Println("This use has referrer", user.RefID)
-                                go freeTokenReferrer(fmt.Sprint(user.ID), fmt.Sprint(user.RefID), network); 
+                                log.Println("This user has referrer", user.RefID)
+                                go FreeTokenReferrer(fmt.Sprint(user.ID), fmt.Sprint(user.RefID), network) 
                             }
                         }
                     } else {
@@ -387,7 +387,7 @@ func ExchangeSignUp(userId uint) {
     }
 }
 
-func freeTokenReferrer(userId string, refId string, network string) {
+func FreeTokenReferrer(userId string, refId string, network string) {
     log.Println("start free token referrer", userId, refId, network)
     ref := models.User{}
     errDb := models.Database().Where("id = ?", refId).First(&ref).Error
