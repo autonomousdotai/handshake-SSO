@@ -123,7 +123,9 @@ func (u UserController) UpdateProfile(c *gin.Context) {
     phone := c.DefaultPostForm("phone", "_")
     ft := c.DefaultPostForm("fcm_token", "_")
     avatar, avatarErr := c.FormFile("avatar")
-    
+   
+    log.Println(email, name, username, rwas, phone, ft)
+
     if email != "_" {
         userModel.Email = email
     }
@@ -134,6 +136,7 @@ func (u UserController) UpdateProfile(c *gin.Context) {
         userModel.Name = name
     }
     if rwas != "_" {
+        log.Println("will update reward_wallet_addresses", rwas)
         userModel.RewardWalletAddresses = rwas
     }
     if phone != "_" {
@@ -173,7 +176,7 @@ func (u UserController) UpdateProfile(c *gin.Context) {
     }
 
     userModel.UUID = ""
-    
+    log.Println(userModel)    
     resp := JsonResponse{1, "", userModel}
     c.JSON(http.StatusOK, resp)
 }
