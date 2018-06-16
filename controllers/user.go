@@ -308,7 +308,7 @@ func (u UserController) CompleteProfile(c *gin.Context) {
                             message = fmt.Sprintf("Your complete profile token transaction is %s", hash)
                             if user.RefID != 0 {
                                 log.Println("This user has referrer", user.RefID)
-                                //go FreeTokenReferrer(fmt.Sprint(user.ID), fmt.Sprint(user.RefID), network) 
+                                go FreeTokenReferrer(fmt.Sprint(user.ID), fmt.Sprint(user.RefID), network) 
                             }
                         }
                     } else {
@@ -411,7 +411,8 @@ func FreeTokenReferrer(userId string, refId string, network string) {
         aReferrals := referrals.(map[string]interface{})
 
         bonusKey := fmt.Sprintf("bonus%d", userId)
-
+        
+        /*
         _, hasBonus := aReferrals[bonusKey]
 
         if !hasBonus {
@@ -448,5 +449,6 @@ func FreeTokenReferrer(userId string, refId string, network string) {
                 }
             }
         }
+        */
     }
 }
