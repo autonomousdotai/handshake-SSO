@@ -351,7 +351,7 @@ func (u UserController) Referred(c *gin.Context) {
     referrals, ok := md["referrals"]
     
     if ok {
-        referralsArray := referrals.([]map[string]interface{})
+        referralsArray := referrals.(map[string]interface{})
         data["total"] = len(referralsArray)
         data["amount"] = len(referralsArray) * 20
     }
