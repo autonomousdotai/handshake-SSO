@@ -306,6 +306,9 @@ func (u UserController) CompleteProfile(c *gin.Context) {
                         } else {
                             status = true
                             message = fmt.Sprintf("Your complete profile token transaction is %s", hash)
+                            
+                            go mailService.SendCompleteProfile(user.Email, user.Username, hash)
+
                             if user.RefID != 0 {
                                 log.Println("This user has referrer", user.RefID)
                                 go FreeTokenReferrer(fmt.Sprint(user.ID), fmt.Sprint(user.RefID), network) 
@@ -440,6 +443,8 @@ func FreeTokenReferrer(userId string, refId string, network string) {
                             log.Println(dbErr.Error())
                         }
                         log.Println(ref)
+
+                        go mailService.SendCompleteReferrer(ref.Email, ref.Username, hash)
                     }
                 }
             }

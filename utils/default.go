@@ -60,3 +60,23 @@ func RandomNinjaName() (string) {
     name := fmt.Sprintf("%s %s %s", nameGroup1[r1], nameGroup2[r2], nameGroup3[r3])
     return strings.Replace(name, " ", "", -1)
 }
+
+func GetServerEndpoint() string {
+    conf := config.GetConfig()
+    endpoint := "https://stag.ninja.org"
+    env := conf.GetString("env")
+    if env == "prod" {
+        endpoint = "https://ninja.org" 
+    }
+    return endpoint
+}
+
+func GetChainNetwork() string {
+    conf := config.GetConfig()
+    network := "rinkeby"
+    env := conf.GetString("env")
+    if env == "prod" {
+        network = "mainnet"
+    }
+    return network
+}

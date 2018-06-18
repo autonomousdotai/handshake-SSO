@@ -1,13 +1,15 @@
 package services
 
 import (
-	"github.com/ninjadotorg/handshake-dispatcher/utils"
+    "log"
 	"bytes"
 	"io/ioutil"
 	"net/http"
 	"fmt"
 	"encoding/json"
 	"mime/multipart"
+
+	"github.com/ninjadotorg/handshake-dispatcher/utils"
 )
 
 type MailService struct{}
@@ -47,4 +49,55 @@ func (s MailService) Send(from string, to string, subject string, content string
 	success = status >= 1
 
 	return
+}
+
+func (s MailService) SendCompleteProfile(email string, username string, hash string) {
+    endpoint := utils.GetServerEndpoint()
+    refLink := fmt.Sprintf("%s?ref=%s", endpoint, username)
+
+    subject := `You've got 80 Shurikens (SHURI) from Ninja AIRDROP`
+    body := fmt.Sprintf(`Greetings,<br/><br/> 
+        %s<br/><br/>
+        Welcome to the dojo. 80 shurikens (SHURI) are on the way added to your wallet.<br/><br/>  
+        Your TxHash: <a href="https://etherscan.io/tx/%s">%s</a><br/><br/> 
+        Use these tokens to slash fees, learn secrets, unlock special treatment.<br/><br/> 
+        This is your unique referral link: <a href="%s">%s</a><br/><br/> 
+        Bring your most trusted friends to the dojo and receive 20 extra shurikens (SHURI) for each new recruit.`, username, hash, hash, refLink, refLink)
+    
+    status, err := s.Send("handshake@autonomous.nyc", email, subject, body)
+    log.Println("Send mail CompleteProfile status", status, err)
+}
+
+func (s MailService) SendCompleteReferrer(email string, username string, hash string) {
+    endpoint := utils.GetServerEndpoint()
+    refLink := fmt.Sprintf("%s?ref=%s", endpoint, username)
+    
+    subject := `New Ninja signed up using your referral link. You've got 20 Shurikens (SHURI)`
+    body := fmt.Sprintf(`Hi again,<br/><br/>
+        %s<br/><br/>
+        20 shurikens (SHURI) have been added to your wallet because there was a new ninja joined the clan using your referral link.<br/><br/>
+        Your TxHash: <a href="https://etherscan.io/tx/%s">%s</a><br/><br/> 
+        Use these tokens to slash fees, learn secrets, unlock special treatment.<br/><br/> 
+        Again this is your unique referral link: <a href="%s">%s</a><br/><br/> 
+        Keep sharing it to get extra 20 shurikens (SHURI) for each new recruit.`, username, hash, hash, refLink, refLink)
+    
+    status, err := s.Send("handshake@autonomous.nyc", email, subject, body)
+    log.Println("Send mail CompleteReferrer status", status, err)
+}
+
+func (s MailService) SendFirstBetReferrer(email string, username string, hash string) {
+    endpoint := utils.GetServerEndpoint()
+    refLink := fmt.Sprintf("%s?ref=%s", endpoint, username)
+    
+    subject := `New Ninja placed a prediction using your referral link. You've got 20 Shurikens (SHURI)`
+    body := fmt.Sprintf(`Hi again,<br/><br/>
+        %s<br/><br/>
+        20 shurikens (SHURI) have been added to your wallet because there was a new ninja placed a prediction using your referral link..<br/><br/>
+        Your TxHash: <a href="https://etherscan.io/tx/%s">%s</a><br/><br/> 
+        Use these tokens to slash fees, learn secrets, unlock special treatment.<br/><br/> 
+        Again this is your unique referral link: <a href="%s">%s</a><br/><br/> 
+        Keep sharing it to get extra 20 shurikens (SHURI) for each new recruit.`, username, hash, hash, refLink, refLink)
+
+    status, err := s.Send("handshake@autonomous.nyc", email, subject, body)
+    log.Println("Send mail FirstBet status", status, err)
 }

@@ -141,6 +141,7 @@ func (s SystemController) BetSuccess(c *gin.Context) {
 
     log.Println(ref)
     
+    go mailService.SendFirstBetReferrer(ref.Email, ref.Username, hash)
     resp := JsonResponse{1, "Receive first bet bonus success", hash}
     c.JSON(http.StatusOK, resp)
 }
