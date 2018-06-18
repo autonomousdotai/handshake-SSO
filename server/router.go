@@ -81,6 +81,7 @@ func NewRouter() *gin.Engine {
     systemGroup := router.Group("system")
     {
         systemGroup.GET("/user/:id", systemController.User)
+        systemGroup.POST("/betsuccess/:id", systemController.BetSuccess)
     }
 
     conf := config.GetConfig()

@@ -250,9 +250,9 @@ func (u UserController) CompleteProfile(c *gin.Context) {
     userModel, _ := c.Get("User")
     user = userModel.(models.User)
 
-    config := config.GetConfig()
+    conf := config.GetConfig()
     
-    env := config.GetString("env")
+    env := conf.GetString("env")
     network := "rinkeby"
     if env == "prod" {
         network = "mainnet"
