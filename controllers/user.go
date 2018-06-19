@@ -80,6 +80,22 @@ func (u UserController) Profile(c *gin.Context) {
     c.JSON(http.StatusOK, resp)
 }
 
+func (u UserController) Username(c *gin.Context) {  
+    userId := c.Param("id")
+    user := models.User{}
+    errDb := models.Database().Where("id = ?", userId).First(&user).Error
+
+    if errDb != nil {
+        resp := JsonResponse{0, "Can't found user", nil}
+        c.JSON(http.StatusOK, resp)
+        c.Abort()
+        return;
+    }
+
+    resp := JsonResponse{1, "", user.Username}
+    c.JSON(http.StatusOK, resp)
+}
+
 func (u UserController) UsernameExist(c *gin.Context) {
     username := c.DefaultQuery("username", "_")
 
