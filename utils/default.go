@@ -63,7 +63,7 @@ func RandomNinjaName() (string) {
 
 func GetServerEndpoint() string {
     conf := config.GetConfig()
-    endpoint := "https://stag.ninja.org"
+    endpoint := "https://staging.ninja.org"
     env := conf.GetString("env")
     if env == "prod" {
         endpoint = "https://ninja.org" 
