@@ -3,11 +3,13 @@ package controllers
 import (
 	"github.com/gin-gonic/gin"
 	"net/http"
-	"github.com/ninjadotorg/handshake-dispatcher/services"
-	"golang.org/x/crypto/bcrypt"
-	"net/url"
+    "encoding/json"
+    "time"
+    "log"
 	"fmt"
-	"github.com/ninjadotorg/handshake-dispatcher/config"
+    "github.com/ninjadotorg/handshake-dispatcher/utils"
+	"github.com/ninjadotorg/handshake-dispatcher/services"
+    "github.com/ninjadotorg/handshake-dispatcher/models"
 )
 
 type VerifierController struct{}
@@ -58,25 +60,47 @@ func (s VerifierController) SendEmailVerification(c *gin.Context) {
 	email := c.DefaultQuery("email", "")
 	// locale := c.DefaultQuery("locale", "en")
 
-	bytes, err := bcrypt.GenerateFromPassword([]byte(email), 14)
-	token := string(bytes)
-	token = url.QueryEscape(token)
+    code := utils.RandomVerificationCode()
 
-	cfg := config.GetConfig()
-	verificationUrl := cfg.GetString("email_verification_url")
-	verificationUrl = fmt.Sprintf("%s?token=%s", verificationUrl, token)
+    var userModel models.User
+    user, _ := c.Get("User")
+    userModel = user.(models.User)
+
+    var md map[string]interface{}
+    if userModel.Metadata != "" { 
+        json.Unmarshal([]byte(userModel.Metadata), &md)   
+    } else {
+        md = map[string]interface{}{}
+    }
+
+    md["verification-code"] = map[string]interface{}{
+        "time": time.Now(),
+        "code": code,
+    }
+
+    metadata, _ := json.Marshal(md)
+    userModel.Metadata = string(metadata)
+    dbErr := models.Database().Save(&userModel).Error
+    if dbErr != nil {
+        log.Println("Send verification failed", dbErr.Error())
+        resp := JsonResponse{0, "Send verification failed", nil}
+		c.JSON(http.StatusOK, resp)
+		c.Abort()
+        return;
+    }
 
 	mailClient := services.MailService{}
 
 	subject := "Email verification"
-	content := fmt.Sprintf(EMAIL_VERIFICATION_TEMPLATE, verificationUrl)
+	content := fmt.Sprintf(EMAIL_VERIFICATION_TEMPLATE, code)
 
-	success, err := mailClient.Send(" shake@shake.ninja ", email, subject, content)
+	success, err := mailClient.Send("dojo@ninja.org", email, subject, content)
 
 	if err != nil || !success {
 		resp := JsonResponse{0, "Send verification failed", nil}
 		c.JSON(http.StatusOK, resp)
-		return
+		c.Abort()
+        return;
 	}
 
 	resp := JsonResponse{1, "", nil}
@@ -84,15 +108,38 @@ func (s VerifierController) SendEmailVerification(c *gin.Context) {
 }
 
 func (s VerifierController) CheckEmailVerification(c *gin.Context) {
-	email := c.DefaultQuery("email", "")
-	token := c.DefaultQuery("token", "")
+    code := c.DefaultQuery("code", "")
 
-	err := bcrypt.CompareHashAndPassword([]byte(token), []byte(email))
+    var userModel models.User
+    user, _ := c.Get("User")
+    userModel = user.(models.User)
 
-	resp := JsonResponse{0, "Email verified failed", nil}
-	if err == nil {
-		resp = JsonResponse{1, "", nil}
-	}
+    var md map[string]interface{}
+    if userModel.Metadata != "" { 
+        json.Unmarshal([]byte(userModel.Metadata), &md)   
+    } else {
+        md = map[string]interface{}{}
+    }
+
+    verificationCode, hasCode := md["verification-code"]
+
+    if !hasCode {
+        resp := JsonResponse{0, "Email verified failed", nil}
+        c.JSON(http.StatusOK, resp) 
+        c.Abort()
+        return;
+    }
+
+    realCode := (verificationCode.(map[string]interface{}))["code"]
+
+    if code != realCode.(string) {
+        resp := JsonResponse{0, "Email verified failed", nil}
+        c.JSON(http.StatusOK, resp) 
+        c.Abort()
+        return;
+    }
+
+	resp := JsonResponse{1, "", nil}
 	c.JSON(http.StatusOK, resp)
 }
 
@@ -102,7 +149,7 @@ const EMAIL_VERIFICATION_TEMPLATE = `<html>
     Hey Ninja,
 </p>
 <p>
-    Here's your email verification link:<br/><a href="%s"></a>
+    Here's your email verification code: <b>%s</b>
 </p>
 <p>
     Just tap and you're in.

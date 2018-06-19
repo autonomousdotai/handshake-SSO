@@ -45,6 +45,10 @@ func random(min, max int) int {
     return rand.Intn(max - min) + min
 }
 
+func RandomVerificationCode() int{
+    return random(1000, 9999)
+}
+
 func RandomNinjaName() (string) {
     nameGroup1 := []string{"Sad", "Shady", "Surprised", "Happy", "Ridiculous", "Endangered", "Silly", "Crazy", "Sweet", "Amazing", "Confused", "Empty", "Excited", "Manic", "Furious", "Hopeful", "Joyful", "Mad", "Peaceful", "Perplexed", "Powerful", "Proud", "Soulful", "Celebrated", "Worthy", "Angry", "Rare", "Enraged", "Spiteful", "Calm", "Insane", "Humble", "Empty", "The", "Kooky", "Burdened", "Tragic", "Panicked", "Desperate", "Desolate", "Amiable", "Pleasant", "Chewy", "Slimy", "Gregarious", "Vain", "Mopey", "Lame", "Bottomless", "Zen", "Shiny", "Renewed", "Reborn", "Mental", "Metal", "Ashamed", "Fair", "Wise", "Worldly", "Curious", "Wide", "Narrow", "Short", "Tall", "Curved", "Wonky", "Flightless", "Bored", "Superior", "Inferior", "Pungent", "Delicate", "Polite", "Gentle", "Senior"}
 
