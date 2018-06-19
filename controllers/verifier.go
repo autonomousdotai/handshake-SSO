@@ -108,6 +108,7 @@ func (s VerifierController) SendEmailVerification(c *gin.Context) {
 }
 
 func (s VerifierController) CheckEmailVerification(c *gin.Context) {
+    email := c.DefaultQuery("email", "")
     code := c.DefaultQuery("code", "")
 
     var userModel models.User
@@ -132,6 +133,19 @@ func (s VerifierController) CheckEmailVerification(c *gin.Context) {
 
     realCode := (verificationCode.(map[string]interface{}))["code"]
     if fmt.Sprint(realCode) != fmt.Sprint(code) {
+        resp := JsonResponse{0, "Email verified failed", nil}
+        c.JSON(http.StatusOK, resp) 
+        c.Abort()
+        return;
+    }
+
+    
+    delete(md, "verification-code")
+    metadata, _ := json.Marshal(md)
+    userModel.Metadata = string(metadata)
+    userModel.Email = email
+    dbErr := models.Database().Save(&userModel).Error
+    if dbErr != nil {
         resp := JsonResponse{0, "Email verified failed", nil}
         c.JSON(http.StatusOK, resp) 
         c.Abort()
