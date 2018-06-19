@@ -102,18 +102,19 @@ const EMAIL_VERIFICATION_TEMPLATE = `<html>
     Hey Ninja,
 </p>
 <p>
-    All you need to do is click the following link and your email will be verified.
-	<br><a href="%s">Verification Link</a>
+    Here's your email verification link:<br/><a href="%s"></a>
 </p>
 <p>
-    Have fun in the dojo,<br/>
-    Aliesha
+    Just tap and you're in.
 </p>
 <p>
-    Shake | Ninja
+    You look like a winner.
 </p>
 <p>
-    Join the conversation at <a href="https://tme/ninja_org">https://tme/ninja_org</a>
+    Ninja.org<br/>
+    Join the conversation at <a href="https://t.me/ninja_org">t.me/ninja_org</a>
+</p>
+<p>
 </p>
 </body>
 </html>
