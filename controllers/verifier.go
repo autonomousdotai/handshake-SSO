@@ -131,8 +131,7 @@ func (s VerifierController) CheckEmailVerification(c *gin.Context) {
     }
 
     realCode := (verificationCode.(map[string]interface{}))["code"]
-
-    if code != realCode.(string) {
+    if fmt.Sprint(realCode) != fmt.Sprint(code) {
         resp := JsonResponse{0, "Email verified failed", nil}
         c.JSON(http.StatusOK, resp) 
         c.Abort()
