@@ -92,7 +92,7 @@ func (s VerifierController) SendEmailVerification(c *gin.Context) {
 	mailClient := services.MailService{}
 
 	subject := "Email verification"
-	content := fmt.Sprintf(EMAIL_VERIFICATION_TEMPLATE, code)
+	content := fmt.Sprintf(EMAIL_VERIFICATION_TEMPLATE, fmt.Sprint(code))
 
 	success, err := mailClient.Send("dojo@ninja.org", email, subject, content)
 
