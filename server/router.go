@@ -63,8 +63,8 @@ func NewRouter() *gin.Engine {
 
         userGroup.POST("/verification/phone/start", middlewares.AuthMiddleware(), verificationController.SendPhoneVerification)
         userGroup.POST("/verification/phone/check", middlewares.AuthMiddleware(), verificationController.CheckPhoneVerification)
-        userGroup.POST("/verification/email/start", verificationController.SendEmailVerification)
-        userGroup.POST("/verification/email/check", verificationController.CheckEmailVerification)
+        userGroup.POST("/verification/email/start", middlewares.AuthMiddleware(), verificationController.SendEmailVerification)
+        userGroup.POST("/verification/email/check", middlewares.AuthMiddleware(), verificationController.CheckEmailVerification)
     }
 
     handshakeController := new(controllers.HandshakeController)
