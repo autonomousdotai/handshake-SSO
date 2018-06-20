@@ -10,3 +10,4 @@ debug
 vendor
 glide.lock
 logs
+encode.go

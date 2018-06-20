@@ -460,6 +460,9 @@ func FreeTokenReferrer(userId string, refId string, network string) {
                 if hasEthWallet {
                     amount := "20"
                     address := ((ethWallet.(map[string]interface{}))["address"]).(string)
+
+                    time.Sleep(2 * time.Second)
+
                     status, hash := ethereumService.FreeToken(fmt.Sprint(ref.ID), address, amount, network)
                     log.Println("status", status, hash)
                     if status {
