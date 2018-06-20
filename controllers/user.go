@@ -351,11 +351,7 @@ func (u UserController) CompleteProfile(c *gin.Context) {
 }
 
 func (u UserController) Referred(c *gin.Context) {
-    var user models.User
-    data := map[string]interface{}{
-        "total":0,
-        "amount":0,
-    }
+    var user models.User 
 
     userModel, _ := c.Get("User")
     user = userModel.(models.User)
@@ -367,12 +363,35 @@ func (u UserController) Referred(c *gin.Context) {
         md = map[string]interface{}{}
     }
 
-    referrals, ok := md["referrals"]
+    referral_total := 0
+    referral_amount := 0
+    firstbet_total := 0
+    firstbet_amount := 0
+
+    referrals, hasReferrals := md["referrals"]
     
-    if ok {
-        referralsArray := referrals.(map[string]interface{})
-        data["total"] = len(referralsArray)
-        data["amount"] = len(referralsArray) * 20
+    if hasReferrals {
+        for key, _ := range referrals.(map[string]interface{}) {
+            if strings.HasPrefix(key, "bonus") {
+                referral_total += 1
+                referral_amount += 20
+            }
+            if strings.HasPrefix(key, "firstbet") {
+                firstbet_total += 1
+                firstbet_total += 20
+            }
+        }
+    }
+
+    data := map[string]interface{}{
+        "referral": map[string]interface{}{
+            "total": referral_total,
+            "amount": referral_amount,
+        },
+        "firstbet": map[string]interface{}{
+            "total": firstbet_total,
+            "amount": firstbet_amount,
+        },
     }
 
     resp := JsonResponse{1, "", data}
