@@ -38,7 +38,6 @@ func NewRouter() *gin.Engine {
 
     defaultController := new(controllers.DefaultController)
     router.GET("/", defaultController.Home) 
-    router.POST("/notification", defaultController.Notify)
 
     nonceController := new(controllers.NonceController)
     nonceGroup := router.Group("nonce")
@@ -60,6 +59,9 @@ func NewRouter() *gin.Engine {
 
         userGroup.GET("/referred", middlewares.AuthMiddleware(), userController.Referred)
         userGroup.POST("/complete-profile", middlewares.AuthMiddleware(), userController.CompleteProfile)
+
+
+        userGroup.POST("/notification", middlewares.AuthMiddleware(), userController.Notification)
 
         userGroup.POST("/verification/phone/start", middlewares.AuthMiddleware(), verificationController.SendPhoneVerification)
         userGroup.POST("/verification/phone/check", middlewares.AuthMiddleware(), verificationController.CheckPhoneVerification)

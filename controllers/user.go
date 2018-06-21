@@ -407,19 +407,26 @@ func (u UserController) Notification(c *gin.Context) {
     c.BindJSON(&data)
 
     to, hasTo := data["to"]
+
+    if !hasTo {
+        resp := JsonResponse{0, "Invalid params", nil}
+        c.JSON(http.StatusOK, resp)
+        c.Abort()
+        return;
+    }
    
     user := models.User{}
     errDb := models.Database().Where("wallet_addresses LIKE ?", fmt.Sprintf("%%%s%%", to)).First(&user).Error
     
     if errDb != nil {
-        resp := JsonResponse{0, "User is not found."}
+        resp := JsonResponse{0, "User is not found.", nil}
         c.JSON(http.StatusOK, resp)
         c.Abort()
         return;
     }
 
     if user.FCMToken == "" {
-        resp := JsonResponse{0, "Invalid fcm token"}
+        resp := JsonResponse{0, "Invalid fcm token", nil}
         c.JSON(http.StatusOK, resp)
         c.Abort()
         return;
@@ -427,11 +434,15 @@ func (u UserController) Notification(c *gin.Context) {
 
     data["to"] = user.FCMToken
 
-    status, err := fcmService.Notify(data) 
+    jsonData := map[string]interface{}{
+        "data": data,
+    }
+
+    status, err := fcmService.Notify(jsonData) 
 
     if !status {
         log.Println(err.Error())
-        resp := JsonResponse{0, "Send notification failed."}
+        resp := JsonResponse{0, "Send notification failed.", nil}
         c.JSON(http.StatusOK, resp)
         c.Abort()
         return;
