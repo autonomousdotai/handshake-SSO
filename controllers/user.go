@@ -404,9 +404,19 @@ func (u UserController) Referred(c *gin.Context) {
 func (u UserController) Notification(c *gin.Context) {
     var data map[string]interface{}
 
-    c.BindJSON(&data)
+    err := c.BindJSON(&data)
+
+    if err != nil {
+        fmt.Println(err)
+        resp := JsonResponse{0, "Invalid params", nil}
+        c.JSON(http.StatusOK, resp)
+        c.Abort()
+        return;
+    }
 
     to, hasTo := data["to"]
+
+    fmt.Println(data)
 
     if !hasTo {
         resp := JsonResponse{0, "Invalid params", nil}
