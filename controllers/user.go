@@ -136,6 +136,7 @@ func (u UserController) UpdateProfile(c *gin.Context) {
     name := c.DefaultPostForm("name", "_")
     username := c.DefaultPostForm("username", "_")
     rwas := c.DefaultPostForm("reward_wallet_addresses", "_")
+    was := c.DefaultPostForm("wallet_addresses", "_")
     phone := c.DefaultPostForm("phone", "_")
     ft := c.DefaultPostForm("fcm_token", "_")
     avatar, avatarErr := c.FormFile("avatar")
@@ -152,8 +153,10 @@ func (u UserController) UpdateProfile(c *gin.Context) {
         userModel.Name = name
     }
     if rwas != "_" {
-        log.Println("will update reward_wallet_addresses", rwas)
         userModel.RewardWalletAddresses = rwas
+    }
+    if was != "_" {
+        userModel.WalletAddresses = was
     }
     if phone != "_" {
         userModel.Phone = phone
@@ -398,8 +401,43 @@ func (u UserController) Referred(c *gin.Context) {
     c.JSON(http.StatusOK, resp)
 }
 
-func (u UserController) ExportPassphrase(c *gin.Context) {
-    resp := JsonResponse{1, "", "Export passpharse"}
+func (u UserController) Notification(c *gin.Context) {
+    var data map[string]interface{}
+
+    c.BindJSON(&data)
+
+    to, hasTo := data["to"]
+   
+    user := models.User{}
+    errDb := models.Database().Where("wallet_addresses LIKE ?", fmt.Sprintf("%%%s%%", to)).First(&user).Error
+    
+    if errDb != nil {
+        resp := JsonResponse{0, "User is not found."}
+        c.JSON(http.StatusOK, resp)
+        c.Abort()
+        return;
+    }
+
+    if user.FCMToken == "" {
+        resp := JsonResponse{0, "Invalid fcm token"}
+        c.JSON(http.StatusOK, resp)
+        c.Abort()
+        return;
+    }
+
+    data["to"] = user.FCMToken
+
+    status, err := fcmService.Notify(data) 
+
+    if !status {
+        log.Println(err.Error())
+        resp := JsonResponse{0, "Send notification failed."}
+        c.JSON(http.StatusOK, resp)
+        c.Abort()
+        return;
+    }
+
+    resp := JsonResponse{1, "", nil}
     c.JSON(http.StatusOK, resp)
 }
 
