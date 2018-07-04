@@ -32,8 +32,8 @@ func (u UserController) SignUp(c *gin.Context) {
     db := models.Database()
     
     exist := true
-    username := ""
-    
+    username := passpharse[]
+    /* 
     for exist {
         count := 0
         username = utils.RandomNinjaName()
@@ -42,8 +42,9 @@ func (u UserController) SignUp(c *gin.Context) {
             exist = false
         }
     }
+    */
 
-    user := models.User{UUID: UUID, Username: username}
+    user := models.User{UUID: UUID, Username: UUID[len(UUID)-8:]}
     if ref != "" {
         refUser := models.User{}
         refErr := db.Where("username = ?", ref).First(&refUser).Error
