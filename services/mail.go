@@ -62,7 +62,7 @@ func (s MailService) SendCompleteProfile(email string, username string, hash str
         Your TxHash: <a href="https://etherscan.io/tx/%s">%s</a><br/><br/> 
         Use these tokens to slash fees, learn secrets, unlock special treatment.<br/><br/> 
         This is your unique referral link: <a href="%s">%s</a><br/><br/> 
-        Bring your most trusted friends to the dojo and receive 20 extra shurikens (SHURI) for each new recruit.`, endpoint, username, hash, hash, refLink, refLink)
+        Bring your most trusted friends to the dojo and receive 20 extra shurikens (SHURI) for each new recruit.`, username, endpoint, hash, hash, refLink, refLink)
     
     status, err := s.Send("dojo@ninja.org", email, subject, body)
     log.Println("Send mail CompleteProfile status", status, err)
@@ -78,23 +78,56 @@ func (s MailService) SendCompleteReferrer(email string, username string, hash st
         Thanks for bringing a new ninja to the dojo. 20 shurikens (SHURI) have been added to <a href="%s">your wallet</a>.<br/><br/>
         Your TxHash: <a href="https://etherscan.io/tx/%s">%s</a><br/><br/> 
         Keep fighting the good fight. Spread your unique referral link: <a href="%s">%s</a><br/><br/> 
-        This does not expire. Keep getting extra 20 shurikens (SHURI) for each new recruit.`, endpoint, username, hash, hash, refLink, refLink)
+        This does not expire. Keep getting extra 20 shurikens (SHURI) for each new recruit.`, username, endpoint, hash, hash, refLink, refLink)
     
     status, err := s.Send("dojo@ninja.org", email, subject, body)
     log.Println("Send mail CompleteReferrer status", status, err)
+}
+
+func (s MailService) SendFirstBet(email string, username string, hash string) {
+    endpoint := utils.GetServerEndpoint()
+    refLink := fmt.Sprintf("%s?ref=%s", endpoint, username)
+    
+    subject := `Your ninja recruit placed a prediction. That's another 20 Shurikens (SHURI) for you.`
+    body := fmt.Sprintf(`Hi again,<br/><br/>
+        %s<br/><br/>
+        Your new recruit placed a prediction using your referral link. 20 shurikens (SHURI) have been added to <a href="%s">your wallet</a>. Boo ya!<br/><br/>
+        Your TxHash: <a href="https://etherscan.io/tx/%s">%s</a><br/><br/> 
+        Keep spreading the love: <a href="%s">%s</a><br/><br/> 
+        20 shurikens (SHURI) for each new recruit.`, username, endpoint, hash, hash, refLink, refLink)
+
+    status, err := s.Send("dojo@ninja.org", email, subject, body)
+    log.Println("Send mail FirstBet status", status, err)
 }
 
 func (s MailService) SendFirstBetReferrer(email string, username string, hash string) {
     endpoint := utils.GetServerEndpoint()
     refLink := fmt.Sprintf("%s?ref=%s", endpoint, username)
     
-    subject := `Your ninja recruit placed a prediction. That’s another 20 Shurikens (SHURI) for you.`
+    subject := `Your ninja recruit placed a prediction. That's another 20 Shurikens (SHURI) for you.`
     body := fmt.Sprintf(`Hi again,<br/><br/>
         %s<br/><br/>
         Your new recruit placed a prediction using your referral link. 20 shurikens (SHURI) have been added to <a href="%s">your wallet</a>. Boo ya!<br/><br/>
         Your TxHash: <a href="https://etherscan.io/tx/%s">%s</a><br/><br/> 
         Keep spreading the love: <a href="%s">%s</a><br/><br/> 
-        20 shurikens (SHURI) for each new recruit.`, endpoint, username, hash, hash, refLink, refLink)
+        20 shurikens (SHURI) for each new recruit.`, username, endpoint, hash, hash, refLink, refLink)
+
+    status, err := s.Send("dojo@ninja.org", email, subject, body)
+    log.Println("Send mail FirstBet status", status, err)
+}
+
+func (s MailService) SendFreeBet(email string, username string, hash string) {
+    endpoint := utils.GetServerEndpoint()
+    refLink := fmt.Sprintf("%s?ref=%s", endpoint, username)
+    
+    subject := `You've got 20 Shurikens (SHURI) from Ninja for placing your free bet`
+    body := fmt.Sprintf(`Greatings,<br/><br/>
+        %s<br/><br/>
+        Welcome to the dojo. 20 shurikens (SHURI) have been added to <a href="%s">your wallet</a>.<br/><br/>
+        Your TxHash: <a href="https://etherscan.io/tx/%s">%s</a><br/><br/>
+        Use these tokens to slash fees, learn secrets, unlock special treatment.<br/><br/>
+        This is your unique referral link: <a href="%s">%s</a><br/><br/> 
+        Bring your most trusted friends to the dojo and receive 20 extra shurikens (SHURI) for each new recruit.`, username, endpoint, hash, hash, refLink, refLink)
 
     status, err := s.Send("dojo@ninja.org", email, subject, body)
     log.Println("Send mail FirstBet status", status, err)

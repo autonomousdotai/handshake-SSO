@@ -32,6 +32,7 @@ func (s SystemController) User(c *gin.Context) {
 
 func (s SystemController) BetSuccess(c *gin.Context) {
     userId := c.Param("id")
+    betType := c.DefaultPostForm("type", "1")
 
     user := models.User{}
     errDb := models.Database().Where("id = ?", userId).First(&user).Error
@@ -63,85 +64,172 @@ func (s SystemController) BetSuccess(c *gin.Context) {
         network = "mainnet"
     }
 
-    var refMd map[string]interface{}
-    if ref.Metadata != "" { 
-        json.Unmarshal([]byte(ref.Metadata), &refMd)   
+    if betType == "1" {
+        BonusFirstBet(c, &user, &ref, network)
     } else {
-        refMd = map[string]interface{}{}
+        BonusFreeBet(c, &user, network)
+    }
+
+    c.Abort()
+    return;
+}
+
+func BonusFirstBet(c *gin.Context, user *models.User, ref *models.User, network string) {
+    userMd := GetUserMetadata(user)
+
+    // todo send user free ether
+    bonusKey := fmt.Sprintf("firstbet")
+
+    amount := "80"
+    status, hash, address := SendFreeShuriken(user, userMd, bonusKey, amount, network)
+
+    if status {
+        userMd[bonusKey] = map[string]interface{}{
+            "address": address,
+            "amount": amount,
+            "hash": hash,
+            "time": time.Now().UTC().Unix(), 
+        }
+
+        metadata, _ := json.Marshal(userMd)
+        user.Metadata = string(metadata)
+        errDb := models.Database().Save(&user).Error
+        if errDb != nil {
+            log.Println("Mark user send bonus failed", errDb.Error())
+            resp := JsonResponse{0, "Mark user send bonus failed", nil}
+            c.JSON(http.StatusOK, resp)
+            c.Abort()
+            return;
+        }
+    }
+
+    go mailService.SendFirstBet(user.Email, user.Username, hash)
+
+
+    refMd := GetUserMetadata(ref)
+    refReferrals, hasRefReferrals := refMd["referrals"]
+    if !hasRefReferrals {
+        refReferrals = map[string]interface{}{}
     }
     
-    referrals, hasReferrals := refMd["referrals"]
-    if !hasReferrals {
-        referrals = map[string]interface{}{}
-    }
+    rbReferrals := refReferrals.(map[string]interface{})
+    rbBonusKey := fmt.Sprintf("firstbet%d", user.ID)
     
-    aReferrals := referrals.(map[string]interface{})
+    rbAmount := "20"
+    rbStatus, rbHash, rbAddress := SendFreeShuriken(ref, rbReferrals, rbBonusKey, rbAmount, network)
+   
+    if rbStatus {
+        rbReferrals[bonusKey] = map[string]interface{}{
+            "address": rbAddress,
+            "amount": rbAmount,
+            "hash": rbHash,
+            "time": time.Now().UTC().Unix(), 
+        }
 
-    bonusKey := fmt.Sprintf("firstbet%d", user.ID)
-    
-    _, hasBonus := aReferrals[bonusKey]
-    if hasBonus {
-        log.Println("Received first bet bonus")
-        resp := JsonResponse{0, "Received first bet bonus", nil}
-        c.JSON(http.StatusOK, resp)
-        c.Abort()
-        return;
+        refMd["referrals"] = rbReferrals        
+        metadata, _ := json.Marshal(refMd)
+        ref.Metadata = string(metadata)
+        errDb := models.Database().Save(&ref).Error
+        if errDb != nil {
+            log.Println("Mark referrer send bonus failed", errDb.Error())
+            resp := JsonResponse{0, "Mark referrer send bonus failed", nil}
+            c.JSON(http.StatusOK, resp)
+            c.Abort()
+            return;
+
+        }
     }
 
-    var refWallets map[string]interface{}
-    if ref.RewardWalletAddresses == "" {
-        log.Println("The referrer have empty reward wallet address")
-        resp := JsonResponse{0, "The referrer have empty reward wallet address", nil}
-        c.JSON(http.StatusOK, resp)
-        c.Abort()
-        return;
-    }
+    log.Println("after BetSuccess", user, ref)
 
-    json.Unmarshal([]byte(ref.RewardWalletAddresses), &refWallets)
-    ethWallet, hasEthWallet := refWallets["ETH"]
+    go mailService.SendFirstBetReferrer(ref.Email, ref.Username, rbHash)
+    resp := JsonResponse{1, "Send first bet bonus success", hash}
+    c.JSON(http.StatusOK, resp)
+}
 
-    if !hasEthWallet {
-        log.Println("The referrer don't have eth reward wallet")
-        resp := JsonResponse{0, "The referrer don't have eth reward wallet", nil}
-        c.JSON(http.StatusOK, resp)
-        c.Abort()
-        return;
-    }
+func BonusFreeBet(c *gin.Context, user *models.User, network string) {
+    userMd := GetUserMetadata(user)
+
+    // todo send user free ether
+    bonusKey := fmt.Sprintf("firstbet")
 
     amount := "20"
+    status, hash, address := SendFreeShuriken(user, userMd, bonusKey, amount, network)
+
+    if status {
+        userMd[bonusKey] = map[string]interface{}{
+            "address": address,
+            "amount": amount,
+            "hash": hash,
+            "time": time.Now().UTC().Unix(), 
+        }
+
+        metadata, _ := json.Marshal(userMd)
+        user.Metadata = string(metadata)
+        errDb := models.Database().Save(&user).Error
+        if errDb != nil {
+            log.Println("Mark user send bonus failed", errDb.Error())
+            resp := JsonResponse{0, "Mark user send bonus failed", nil}
+            c.JSON(http.StatusOK, resp)
+            c.Abort()
+            return;
+        }
+    }
+
+    log.Println("after FreeBetSuccess", user)
+
+    go mailService.SendFreeBet(user.Email, user.Username, hash)
+
+    resp := JsonResponse{1, "Send free bet bonus success", hash}
+    c.JSON(http.StatusOK, resp)
+}
+
+func GetUserMetadata(user *models.User) map[string]interface{} {
+    var md map[string]interface{}
+    if user.Metadata != "" { 
+        json.Unmarshal([]byte(user.Metadata), &md)   
+    } else {
+        md = map[string]interface{}{}
+    }
+    return md;
+}
+
+func SendFreeShuriken(user *models.User, mark map[string]interface{}, bonusKey string, amount string, network string) (bool, string, string) {
+    rtStatus := false
+    rtHash := ""
+    rtAddress := ""
+
+    _, hasBonus := mark[bonusKey]
+    if hasBonus {
+        rtHash = "Received first bet bonus"
+        return rtStatus, rtHash, rtAddress
+    }
+
+    var userWallets map[string]interface{}
+    if user.RewardWalletAddresses == "" {
+        rtHash = "The referrer have empty reward wallet address"
+        return rtStatus, rtHash, rtAddress
+    }
+
+    json.Unmarshal([]byte(user.RewardWalletAddresses), &userWallets)
+    ethWallet, hasEthWallet := userWallets["ETH"]
+
+    if !hasEthWallet {
+        rtHash = "The referrer don't have eth reward wallet"
+        return rtStatus, rtHash, rtAddress
+    }
+
     address := ((ethWallet.(map[string]interface{}))["address"]).(string)
-    status, hash := ethereumService.FreeToken(fmt.Sprint(ref.ID), address, amount, network)
+    status, hash := ethereumService.FreeToken(fmt.Sprint(user.ID), address, amount, network)
     log.Println("status", status, hash)
     if !status {
-        log.Println("Receive first bet bonus failed")
-        resp := JsonResponse{0, "Receive first bet bonus failed", nil}
-        c.JSON(http.StatusOK, resp)
-        c.Abort()
-        return;
-    }
-    aReferrals[bonusKey] = map[string]interface{}{
-        "address": address,
-        "amount": amount,
-        "hash": hash,
-        "time": time.Now().UTC().Unix(), 
+        rtHash = "Receive first bet bonus failed"
+        return rtStatus, rtHash, rtAddress
     }
 
-    refMd["referrals"] = aReferrals        
-    metadata, _ := json.Marshal(refMd)
-    ref.Metadata = string(metadata)
-    errDb = models.Database().Save(&ref).Error
-    if errDb != nil {
-        log.Println("Mark referrer received bonus failed", errDb.Error())
-        resp := JsonResponse{0, "Mark referrer received bonus failed", nil}
-        c.JSON(http.StatusOK, resp)
-        c.Abort()
-        return;
+    rtStatus = true
+    rtHash = hash
+    rtAddress = address
 
-    }
-
-    log.Println(ref)
-    
-    go mailService.SendFirstBetReferrer(ref.Email, ref.Username, hash)
-    resp := JsonResponse{1, "Receive first bet bonus success", hash}
-    c.JSON(http.StatusOK, resp)
+    return rtStatus, rtHash, rtAddress
 }
