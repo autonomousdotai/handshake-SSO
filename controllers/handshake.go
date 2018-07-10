@@ -80,8 +80,8 @@ func (u HandshakeController) Discover(c *gin.Context) {
         return
     }
 
-    user, _ := c.Get("User")
-    userModel := user.(models.User)
+    //user, _ := c.Get("User")
+    //userModel := user.(models.User)
 
     var q, fq, s string
 
@@ -91,7 +91,7 @@ func (u HandshakeController) Discover(c *gin.Context) {
 
     // filter query
     //fq = fmt.Sprintf("is_private_i:0 AND chain_id_i:%d AND -init_user_id_i:%d", chainId, userModel.ID)
-    fq = fmt.Sprintf("is_private_i:0 AND chain_id_i:%d", chainId, userModel.ID)
+    fq = fmt.Sprintf("is_private_i:0 AND chain_id_i:%d", chainId)
 
     // query
     if kws != "_" {
