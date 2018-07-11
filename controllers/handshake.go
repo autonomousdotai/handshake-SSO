@@ -18,7 +18,8 @@ type HandshakeController struct{}
 
 func (u HandshakeController) Me(c *gin.Context) {
     page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-
+    t := c.DefaultQuery("type", "_")
+    
     user, _ := c.Get("User")
     userModel := user.(models.User)
 
@@ -44,6 +45,11 @@ func (u HandshakeController) Me(c *gin.Context) {
     search_shaked_user_ids := fmt.Sprintf("shake_user_ids_is: %d", userModel.ID)
     search_chain_id := fmt.Sprintf("chain_id_i: %d", chainId)
     fq = fmt.Sprintf("(%s OR %s) AND %s", search_init_user_id, search_shaked_user_ids, search_chain_id)
+
+    if t != "_" {
+        search_type := fmt.Sprintf("type_i:%s", t)
+        fq = fmt.Sprintf("%s AND %s", fq, search_type)
+    }
 
     data, err := solrService.List("handshake", q, fq, (page - 1) * LIMIT, LIMIT, s, nil)
 
