@@ -11,3 +11,4 @@ vendor
 glide.lock
 logs
 encode.go
+decode.go

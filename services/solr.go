@@ -14,6 +14,8 @@ type SolrSpatial struct {
     Pt string
     SField string
     D string
+    CSField string
+    TCSField string
 }
 
 type SolrService struct {}
@@ -29,7 +31,11 @@ func (s SolrService) List(t string, q string, fq string, offset int, limit int, 
 
     if spatial != nil {
         q = fmt.Sprintf("%s AND {!geofilt}", q)
-        sort = fmt.Sprintf("geodist() asc, %s", sort)
+        if spatial.CSField != "_" {
+            sort = fmt.Sprintf("%s %s, geodist() asc, %s", spatial.CSField, spatial.TCSField, sort)
+        } else {
+            sort = fmt.Sprintf("geodist() asc, %s", sort)
+        }
     }
 
     if len(q) > 0 {

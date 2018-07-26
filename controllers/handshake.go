@@ -76,6 +76,9 @@ func (u HandshakeController) Discover(c *gin.Context) {
     pt := c.DefaultQuery("pt", "0,0")
     sfield := c.DefaultQuery("sfield", "location_p")
     d := c.DefaultQuery("d", "10")
+    // custom sort
+    cs := c.DefaultQuery("c_sort", "_")
+    tcs := c.DefaultQuery("t_sort", "asc")
 
     chainId, hasChain := c.Get("ChainId")
 
@@ -142,6 +145,8 @@ func (u HandshakeController) Discover(c *gin.Context) {
             Pt: pt,
             SField: sfield,
             D: d,
+            CSField: cs,
+            TCSField: tcs,
         }
     }
 
