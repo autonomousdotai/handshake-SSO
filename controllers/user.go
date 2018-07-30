@@ -416,6 +416,18 @@ func (u UserController) Subscribe(c *gin.Context) {
 
 	log.Println(userModel)
 	resp := JsonResponse{1, "", userModel}
+
+	switch product {
+	case "cash":
+		go mailService.SendCashEmail(email)
+	case "prediction":
+		go mailService.SendPredictionEmail(email)
+	case "wallet":
+		go mailService.SendWalletEmail(email)
+	case "whisper":
+		go mailService.SendWhisperEmail(email)
+	}
+
 	c.JSON(http.StatusOK, resp)
 }
 
