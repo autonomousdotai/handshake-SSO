@@ -153,10 +153,9 @@ func (s MailService) SendPredictionEmail(email string) {
 
 	subject := `Your mobile link for Ninja Prediction`
 	body := fmt.Sprintf(`Hey Ninja!,<br/><br/>
-        Prediction is mobile only. No downloads, no sign ups! To start playing, simply <a href="%s">click here on your phone</a>
-        or enter this link into your mobile browser: <a href="%s">%s</a> <br/><br/>
-        See you there!<br/>
-        Team Ninja`, endpoint, endpoint, endpoint)
+	    Prediction is mobile only. No downloads, no sign ups! To start playing, simply <a href="%s">click here on your phone</a> 
+	    or enter this link into your mobile browser: <a href="%s">%s</a> <br/><br/>
+	    See you there!<br/>Team Ninja`, endpoint, endpoint, endpoint)
 
 	status, err := s.Send("dojo@ninja.org", email, subject, body)
 	log.Println("Send prediction mail status", status, err)
@@ -167,10 +166,9 @@ func (s MailService) SendWalletEmail(email string) {
 
 	subject := `Your mobile link for Ninja Wallet`
 	body := fmt.Sprintf(`Hey Ninja!,<br/><br/>
-        Wallet is mobile web only. No downloads, no sign ups! To check out your Ninja Wallet, simply <a href="%s">click here on your phone</a>
-        or enter this link into your mobile browser: <a href="%s">%s</a> <br/><br/>
-        See you there!<br/>
-        Team Ninja`, endpoint, endpoint, endpoint)
+	    Wallet is mobile web only. No downloads, no sign ups! To check out your Ninja Wallet, simply <a href="%s">click here on your phone</a> 
+	    or enter this link into your mobile browser: <a href="%s">%s</a> <br/><br/>
+	    See you there!<br/>Team Ninja`, endpoint, endpoint, endpoint)
 
 	status, err := s.Send("dojo@ninja.org", email, subject, body)
 	log.Println("Send prediction mail status", status, err)
@@ -181,10 +179,9 @@ func (s MailService) SendWhisperEmail(email string) {
 
 	subject := `Your mobile link for Whisper`
 	body := fmt.Sprintf(`Hey Ninja!,<br/><br/>
-        Whisper is mobile web only. No downloads, no sign ups! To get chatting, just <a href="%s">click here on your phone</a>
-        or enter this link into your mobile browser: <a href="%s">%s</a> <br/><br/>
-        Speak soon,<br/>
-        Team Ninja`, endpoint, endpoint, endpoint)
+	    Whisper is mobile web only. No downloads, no sign ups! To get chatting, just <a href="%s">click here on your phone</a> 
+		or enter this link into your mobile browser: <a href="%s">%s</a> <br/><br/>
+	    Speak soon,<br/>Team Ninja`, endpoint, endpoint, endpoint)
 
 	status, err := s.Send("dojo@ninja.org", email, subject, body)
 	log.Println("Send prediction mail status", status, err)
