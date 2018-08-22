@@ -19,7 +19,6 @@ import (
 type UserController struct{}
 
 func (u UserController) SignUp(c *gin.Context) {
-<<<<<<< HEAD
     config := config.GetConfig()
     UUID, passpharse, err := utils.HashNewUID(config.GetString("secret_key"))
    
@@ -57,45 +56,6 @@ func (u UserController) SignUp(c *gin.Context) {
     resp := JsonResponse{1, "", map[string]interface{}{"passpharse": passpharse}}
     c.JSON(http.StatusOK, resp)
     return
-=======
-	config := config.GetConfig()
-	UUID, passpharse, err := utils.HashNewUID(config.GetString("secret_key"))
-
-	if err != nil {
-		resp := JsonResponse{0, "Sign up failed", nil}
-		c.JSON(http.StatusOK, resp)
-		return
-	}
-
-	ref := c.Query("ref")
-
-	db := models.Database()
-
-	user := models.User{UUID: UUID, Username: UUID}
-	if ref != "" {
-		refUser := models.User{}
-		refErr := db.Where("username = ?", ref).First(&refUser).Error
-
-		if refErr == nil {
-			user.RefID = refUser.ID
-		}
-	}
-
-	errDb := db.Create(&user).Error
-
-	if errDb != nil {
-		resp := JsonResponse{0, "Sign up failed", nil}
-		c.JSON(http.StatusOK, resp)
-		return
-	}
-
-	// implement another logic
-	go ExchangeSignUp(user.ID)
-
-	resp := JsonResponse{1, "", map[string]interface{}{"passpharse": passpharse}}
-	c.JSON(http.StatusOK, resp)
-	return
->>>>>>> f30dcf86cc46ba0c29739e678359b25c8f2cfc9d
 }
 
 func (u UserController) Profile(c *gin.Context) {
@@ -229,7 +189,6 @@ func (u UserController) UpdateProfile(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
-<<<<<<< HEAD
 func (u UserController) UpdateUserProfile(c *gin.Context) {
     uuid := c.DefaultQuery("alias", "_unknown_")
 
@@ -376,66 +335,6 @@ func (u UserController) FreeRinkebyEther(c *gin.Context) {
    
     resp := JsonResponse{1, message, status}
     c.JSON(http.StatusOK, resp)
-=======
-func (u UserController) FreeRinkebyEther(c *gin.Context) {
-	var userModel models.User
-	user, _ := c.Get("User")
-	userModel = user.(models.User)
-
-	address := c.DefaultQuery("address", "_")
-
-	if address == "_" {
-		resp := JsonResponse{0, "Invalid address", nil}
-		c.JSON(http.StatusOK, resp)
-		c.Abort()
-		return
-	}
-
-	var md map[string]interface{}
-	if userModel.Metadata != "" {
-		json.Unmarshal([]byte(userModel.Metadata), &md)
-	} else {
-		md = map[string]interface{}{}
-	}
-
-	var status bool
-	var message string
-	shouldRequest := false
-
-	rinkeby, ok := md["free-rinkeby"]
-	if ok {
-		status = false
-		message = fmt.Sprintf("Your free eth transaction is %s", rinkeby.(map[string]interface{})["hash"])
-	} else {
-		shouldRequest = true
-	}
-
-	if shouldRequest {
-		value := "1"
-		status, message = ethereumService.FreeEther(fmt.Sprint(userModel.ID), address, value, "rinkeby")
-		if status {
-			md["free-rinkeby"] = map[string]interface{}{
-				"address": address,
-				"value":   value,
-				"hash":    message,
-				"time":    time.Now().UTC().Unix(),
-			}
-
-			metadata, _ := json.Marshal(md)
-			userModel.Metadata = string(metadata)
-			dbErr := models.Database().Save(&userModel).Error
-			if dbErr != nil {
-				status = false
-				message = dbErr.Error()
-			} else {
-				status = true
-			}
-		}
-	}
-
-	resp := JsonResponse{1, message, status}
-	c.JSON(http.StatusOK, resp)
->>>>>>> f30dcf86cc46ba0c29739e678359b25c8f2cfc9d
 }
 
 func (u UserController) CompleteProfile(c *gin.Context) {
