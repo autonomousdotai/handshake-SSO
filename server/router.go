@@ -1,13 +1,13 @@
 package server
 
 import (
-    "os"
-    "io"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"os"
 	"strconv"
 	"time"
 
@@ -61,7 +61,7 @@ func NewRouter() *gin.Engine {
 
         userGroup.GET("/referred", middlewares.AuthMiddleware(), userController.Referred)
         userGroup.POST("/complete-profile", middlewares.AuthMiddleware(), userController.CompleteProfile)
-
+        userGroup.POST("/subscribe", userController.Subscribe)
 
         userGroup.POST("/notification", middlewares.AuthMiddleware(), userController.Notification)
 
