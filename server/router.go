@@ -54,7 +54,6 @@ func NewRouter() *gin.Engine {
         userGroup.GET("/username-exist", middlewares.AuthMiddleware(), userController.UsernameExist)
         userGroup.GET("/username/:id", userController.Username)
         userGroup.POST("/profile", middlewares.AuthMiddleware(), userController.UpdateProfile)
-        userGroup.PUT("/profile", middlewares.AuthMiddleware(), userController.UpdateUserProfile)
 
         userGroup.POST("/sign-up", userController.SignUp)
         userGroup.POST("/free-rinkeby-eth", middlewares.AuthMiddleware(), userController.FreeRinkebyEther)

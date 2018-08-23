@@ -132,6 +132,8 @@ func (u UserController) UpdateProfile(c *gin.Context) {
 
 	log.Println(email, name, username, rwas, phone, ft)
 
+    oldUsername := userModel.Username
+
 	if email != "_" {
 		userModel.Email = email
 	}
@@ -183,97 +185,15 @@ func (u UserController) UpdateProfile(c *gin.Context) {
 		return
 	}
 
+    // implement another logic
+    if oldUsername != userModel.Username {
+        go ExchangeUpdateProfile(userModel.ID, userModel.Username)
+    }
+
 	userModel.UUID = ""
 	log.Println(userModel)
 	resp := JsonResponse{1, "", userModel}
 	c.JSON(http.StatusOK, resp)
-}
-
-func (u UserController) UpdateUserProfile(c *gin.Context) {
-    uuid := c.DefaultQuery("alias", "_unknown_")
-
-    if uuid == "_unknown_" {
-        resp := JsonResponse{0, "Update profile failed: can not found user", nil}
-        c.JSON(http.StatusOK, resp)
-        c.Abort()
-        return
-    }
-
-    db := models.Database()
-    userModel := models.User{}
-    findUErr := db.Where("uuid = ?", uuid).First(&userModel).Error
-    if findUErr != nil {
-        resp := JsonResponse{0, "Update profile failed: can not found user", nil}
-        c.JSON(http.StatusOK, resp)
-        c.Abort()
-        return
-    }
-    
-    email := c.DefaultPostForm("email", "_")
-    name := c.DefaultPostForm("name", "_")
-    username := c.DefaultPostForm("username", "_")
-    rwas := c.DefaultPostForm("reward_wallet_addresses", "_")
-    was := c.DefaultPostForm("wallet_addresses", "_")
-    phone := c.DefaultPostForm("phone", "_")
-    ft := c.DefaultPostForm("fcm_token", "_")
-    avatar, avatarErr := c.FormFile("avatar")
-   
-    log.Println(email, name, username, rwas, phone, ft)
-
-    if email != "_" {
-        userModel.Email = email
-    }
-    if username != "_" {
-        userModel.Username = username
-    }
-    if name != "_" {
-        userModel.Name = name
-    }
-    if rwas != "_" {
-        userModel.RewardWalletAddresses = rwas
-    }
-    if was != "_" {
-        userModel.WalletAddresses = was
-    }
-    if phone != "_" {
-        userModel.Phone = phone
-    }
-    if ft != "_" {
-        userModel.FCMToken = ft
-    }
-    
-    if avatarErr == nil {
-        uploadImageFolder := "user"
-        fileName := avatar.Filename
-        imageExt := strings.Split(fileName, ".")[1]
-        fileNameImage := fmt.Sprintf("avatar-%d-image-%s.%s", userModel.ID, time.Now().Format("20060102150405"), imageExt)
-        path := uploadImageFolder + "/" + fileNameImage 
-
-        success, _ := uploadService.Upload(path, avatar)
-        if !success {
-            resp := JsonResponse{0, "Update profile failed: upload file error", nil}
-            c.JSON(http.StatusOK, resp)
-            c.Abort()
-            return  
-        }
-
-        userModel.Avatar = path
-    }
-
-    dbErr := db.Save(&userModel).Error
-
-    if dbErr != nil {
-        log.Println("Error", dbErr.Error())
-        resp := JsonResponse{0, "Update profile failed.", nil}
-        c.JSON(http.StatusOK, resp)
-        c.Abort()
-        return
-    }
-
-    userModel.UUID = ""
-    log.Println(userModel)    
-    resp := JsonResponse{1, "", userModel}
-    c.JSON(http.StatusOK, resp)
 }
 
 func (u UserController) FreeRinkebyEther(c *gin.Context) {  
@@ -592,6 +512,28 @@ func ExchangeSignUp(userId uint, refId uint) {
     endpoint = fmt.Sprintf("%s/%s", endpoint, "user/profile")
     
     request, _ := http.NewRequest("POST", endpoint, bytes.NewBuffer(jsonValue))
+    request.Header.Set("Content-Type", "application/json")
+    
+    client := &http.Client{}
+    _, err := client.Do(request)
+    if err != nil {
+        log.Println("call exchange failed ", err)
+    } else {
+        log.Println("call exchange on SignUp success")
+    }
+}
+
+func ExchangeUpdateProfile(userId uint, username string) {
+    jsonData := make(map[string]interface{})
+    jsonData["id"] = userId
+
+    endpoint, found := utils.GetForwardingEndpoint("exchange")
+    log.Println(endpoint, found)
+    jsonValue, _ := json.Marshal(jsonData)
+  
+    endpoint = fmt.Sprintf("%s/%s?alias=%s", endpoint, "user/profile", username)
+    
+    request, _ := http.NewRequest("PUT", endpoint, bytes.NewBuffer(jsonValue))
     request.Header.Set("Content-Type", "application/json")
     
     client := &http.Client{}
