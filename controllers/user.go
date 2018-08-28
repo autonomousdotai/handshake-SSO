@@ -394,13 +394,24 @@ func (u UserController) Subscribe(c *gin.Context) {
 	var userModel models.SubscribedUser
 	email := c.DefaultPostForm("email", "_")
 	product := c.DefaultPostForm("product", "_")
-	log.Println(email)
+	product_type := c.DefaultPostForm("type", "_")
+
+	err := utils.ValidateFormat(email)
+	if err != nil{
+		resp := JsonResponse{0, "Invalid email.", nil}
+		c.JSON(http.StatusOK, resp)
+		c.Abort()
+	}
 
 	if email != "_" {
 		userModel.Email = email
 	}
 	if product != "_" {
 		userModel.Product = product
+	}
+
+	if product_type != "_" {
+		userModel.ProductType = product_type
 	}
 
 	db := models.Database()
