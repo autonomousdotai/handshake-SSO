@@ -19,43 +19,43 @@ import (
 type UserController struct{}
 
 func (u UserController) SignUp(c *gin.Context) {
-	config := config.GetConfig()
-	UUID, passpharse, err := utils.HashNewUID(config.GetString("secret_key"))
+    config := config.GetConfig()
+    UUID, passpharse, err := utils.HashNewUID(config.GetString("secret_key"))
+   
+    if err != nil {
+        resp := JsonResponse{0, "Sign up failed", nil}
+        c.JSON(http.StatusOK, resp)
+        return
+    }
 
-	if err != nil {
-		resp := JsonResponse{0, "Sign up failed", nil}
-		c.JSON(http.StatusOK, resp)
-		return
-	}
+    ref := c.Query("ref")
 
-	ref := c.Query("ref")
+    db := models.Database()
 
-	db := models.Database()
+    user := models.User{UUID: UUID, Username: UUID}
+    if ref != "" {
+        refUser := models.User{}
+        refErr := db.Where("username = ?", ref).First(&refUser).Error
 
-	user := models.User{UUID: UUID, Username: UUID}
-	if ref != "" {
-		refUser := models.User{}
-		refErr := db.Where("username = ?", ref).First(&refUser).Error
+        if refErr == nil {
+            user.RefID = refUser.ID
+        }
+    }
 
-		if refErr == nil {
-			user.RefID = refUser.ID
-		}
-	}
+    errDb := db.Create(&user).Error
 
-	errDb := db.Create(&user).Error
+    if errDb != nil {
+        resp := JsonResponse{0, "Sign up failed", nil}
+        c.JSON(http.StatusOK, resp)
+        return
+    }
 
-	if errDb != nil {
-		resp := JsonResponse{0, "Sign up failed", nil}
-		c.JSON(http.StatusOK, resp)
-		return
-	}
+    // implement another logic
+    go ExchangeSignUp(user.ID, user.RefID)
 
-	// implement another logic
-	go ExchangeSignUp(user.ID)
-
-	resp := JsonResponse{1, "", map[string]interface{}{"passpharse": passpharse}}
-	c.JSON(http.StatusOK, resp)
-	return
+    resp := JsonResponse{1, "", map[string]interface{}{"passpharse": passpharse}}
+    c.JSON(http.StatusOK, resp)
+    return
 }
 
 func (u UserController) Profile(c *gin.Context) {
@@ -132,6 +132,8 @@ func (u UserController) UpdateProfile(c *gin.Context) {
 
 	log.Println(email, name, username, rwas, phone, ft)
 
+    oldUsername := userModel.Username
+
 	if email != "_" {
 		userModel.Email = email
 	}
@@ -183,70 +185,76 @@ func (u UserController) UpdateProfile(c *gin.Context) {
 		return
 	}
 
+    // implement another logic
+    if oldUsername != userModel.Username {
+        go ExchangeUpdateProfile(userModel.ID, userModel.Username)
+    }
+
 	userModel.UUID = ""
 	log.Println(userModel)
 	resp := JsonResponse{1, "", userModel}
 	c.JSON(http.StatusOK, resp)
 }
 
-func (u UserController) FreeRinkebyEther(c *gin.Context) {
-	var userModel models.User
-	user, _ := c.Get("User")
-	userModel = user.(models.User)
+func (u UserController) FreeRinkebyEther(c *gin.Context) {  
+    var userModel models.User
+    user, _ := c.Get("User")
+    userModel = user.(models.User)
+   
+    address := c.DefaultQuery("address", "_")
 
-	address := c.DefaultQuery("address", "_")
+    if address == "_" {
+        resp := JsonResponse{0, "Invalid address", nil}
+        c.JSON(http.StatusOK, resp)
+        c.Abort()
+        return;
+    }
 
-	if address == "_" {
-		resp := JsonResponse{0, "Invalid address", nil}
-		c.JSON(http.StatusOK, resp)
-		c.Abort()
-		return
-	}
+    var md map[string]interface{}
+    if userModel.Metadata != "" { 
+        json.Unmarshal([]byte(userModel.Metadata), &md)   
+    } else {
+        md = map[string]interface{}{}
+    }
 
-	var md map[string]interface{}
-	if userModel.Metadata != "" {
-		json.Unmarshal([]byte(userModel.Metadata), &md)
-	} else {
-		md = map[string]interface{}{}
-	}
 
-	var status bool
-	var message string
-	shouldRequest := false
+    var status bool
+    var message string
+    shouldRequest := false
 
-	rinkeby, ok := md["free-rinkeby"]
-	if ok {
-		status = false
-		message = fmt.Sprintf("Your free eth transaction is %s", rinkeby.(map[string]interface{})["hash"])
-	} else {
-		shouldRequest = true
-	}
+    rinkeby, ok := md["free-rinkeby"]
+    if ok {
+        status = false
+        message = fmt.Sprintf("Your free eth transaction is %s", rinkeby.(map[string]interface{})["hash"])
+    } else {
+        shouldRequest = true
+    }
 
-	if shouldRequest {
-		value := "1"
-		status, message = ethereumService.FreeEther(fmt.Sprint(userModel.ID), address, value, "rinkeby")
-		if status {
-			md["free-rinkeby"] = map[string]interface{}{
-				"address": address,
-				"value":   value,
-				"hash":    message,
-				"time":    time.Now().UTC().Unix(),
-			}
-
-			metadata, _ := json.Marshal(md)
-			userModel.Metadata = string(metadata)
-			dbErr := models.Database().Save(&userModel).Error
-			if dbErr != nil {
-				status = false
-				message = dbErr.Error()
-			} else {
-				status = true
-			}
-		}
-	}
-
-	resp := JsonResponse{1, message, status}
-	c.JSON(http.StatusOK, resp)
+    if shouldRequest {
+        value := "1"
+        status, message = ethereumService.FreeEther(fmt.Sprint(userModel.ID), address, value, "rinkeby")
+        if status {
+            md["free-rinkeby"] = map[string]interface{}{
+                "address": address,
+                "value": value,
+                "hash": message,
+                "time": time.Now().UTC().Unix(), 
+            }
+        
+            metadata, _ := json.Marshal(md)
+            userModel.Metadata = string(metadata)
+            dbErr := models.Database().Save(&userModel).Error
+            if dbErr != nil {
+                status = false
+                message = dbErr.Error()
+            } else {
+                status = true
+            } 
+        }
+    }
+   
+    resp := JsonResponse{1, message, status}
+    c.JSON(http.StatusOK, resp)
 }
 
 func (u UserController) CompleteProfile(c *gin.Context) {
@@ -503,26 +511,49 @@ func (u UserController) Notification(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
-func ExchangeSignUp(userId uint) {
-	jsonData := make(map[string]interface{})
-	jsonData["id"] = userId
+func ExchangeSignUp(userId uint, refId uint) {
+    jsonData := make(map[string]interface{})
+    jsonData["id"] = userId
+    jsonData["refId"] = refId
 
-	endpoint, found := utils.GetForwardingEndpoint("exchange")
-	log.Println(endpoint, found)
-	jsonValue, _ := json.Marshal(jsonData)
+    endpoint, found := utils.GetForwardingEndpoint("exchange")
+    log.Println(endpoint, found)
+    jsonValue, _ := json.Marshal(jsonData)
+  
+    endpoint = fmt.Sprintf("%s/%s", endpoint, "user/profile")
+    
+    request, _ := http.NewRequest("POST", endpoint, bytes.NewBuffer(jsonValue))
+    request.Header.Set("Content-Type", "application/json")
+    
+    client := &http.Client{}
+    _, err := client.Do(request)
+    if err != nil {
+        log.Println("call exchange failed ", err)
+    } else {
+        log.Println("call exchange on SignUp success")
+    }
+}
 
-	endpoint = fmt.Sprintf("%s/%s", endpoint, "user/profile")
+func ExchangeUpdateProfile(userId uint, username string) {
+    jsonData := make(map[string]interface{})
+    jsonData["id"] = userId
 
-	request, _ := http.NewRequest("POST", endpoint, bytes.NewBuffer(jsonValue))
-	request.Header.Set("Content-Type", "application/json")
-
-	client := &http.Client{}
-	_, err := client.Do(request)
-	if err != nil {
-		log.Println("call exchange failed ", err)
-	} else {
-		log.Println("call exchange on SignUp success")
-	}
+    endpoint, found := utils.GetForwardingEndpoint("exchange")
+    log.Println(endpoint, found)
+    jsonValue, _ := json.Marshal(jsonData)
+  
+    endpoint = fmt.Sprintf("%s/%s?alias=%s", endpoint, "user/profile", username)
+    
+    request, _ := http.NewRequest("PUT", endpoint, bytes.NewBuffer(jsonValue))
+    request.Header.Set("Content-Type", "application/json")
+    
+    client := &http.Client{}
+    _, err := client.Do(request)
+    if err != nil {
+        log.Println("call exchange failed ", err)
+    } else {
+        log.Println("call exchange on SignUp success")
+    }
 }
 
 func FreeTokenReferrer(userId string, refId string, network string) {

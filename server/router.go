@@ -20,87 +20,89 @@ import (
 )
 
 func NewRouter() *gin.Engine {
-	// Logger
-	logFile, err := os.OpenFile("logs/log.txt", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
-	if err != nil {
-		panic(err)
-	}
-	gin.DefaultWriter = io.MultiWriter(logFile, os.Stdout)
-	log.SetOutput(gin.DefaultWriter) // You may need this
-	log.SetFlags(log.Lshortfile | log.LstdFlags)
+    // Logger
+    logFile, err := os.OpenFile("logs/log.txt", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
+    if err != nil {
+        panic(err)
+    }
+    gin.DefaultWriter = io.MultiWriter(logFile, os.Stdout)
+    log.SetOutput(gin.DefaultWriter) // You may need this
+    log.SetFlags(log.Lshortfile | log.LstdFlags)
+    
+    router := gin.New()
+    router.Use(gin.Logger())
+    router.Use(middlewares.CORSMiddleware())
+    router.Use(middlewares.ErrorHandler())
+    router.Use(middlewares.ChainMiddleware())
+    // router.Use(middlewares.IpFilterMiddleware())
 
-	router := gin.New()
-	router.Use(gin.Logger())
-	router.Use(middlewares.CORSMiddleware())
-	router.Use(middlewares.ErrorHandler())
-	router.Use(middlewares.ChainMiddleware())
-	// router.Use(middlewares.IpFilterMiddleware())
+    defaultController := new(controllers.DefaultController)
+    router.GET("/", defaultController.Home) 
 
-	defaultController := new(controllers.DefaultController)
-	router.GET("/", defaultController.Home)
+    nonceController := new(controllers.NonceController)
+    nonceGroup := router.Group("nonce")
+    {
+        nonceGroup.GET("/get", nonceController.Get)
+        nonceGroup.POST("/set", nonceController.Set)
+    }
 
-	nonceController := new(controllers.NonceController)
-	nonceGroup := router.Group("nonce")
-	{
-		nonceGroup.GET("/get", nonceController.Get)
-		nonceGroup.POST("/set", nonceController.Set)
-	}
+    userController := new(controllers.UserController)
+    verificationController := new(controllers.VerifierController)
+    userGroup := router.Group("user")
+    {
+        userGroup.GET("/profile", middlewares.AuthMiddleware(), userController.Profile)
+        userGroup.GET("/username-exist", middlewares.AuthMiddleware(), userController.UsernameExist)
+        userGroup.GET("/username/:id", userController.Username)
+        userGroup.POST("/profile", middlewares.AuthMiddleware(), userController.UpdateProfile)
 
-	userController := new(controllers.UserController)
-	verificationController := new(controllers.VerifierController)
-	userGroup := router.Group("user")
-	{
-		userGroup.GET("/profile", middlewares.AuthMiddleware(), userController.Profile)
-		userGroup.GET("/username-exist", middlewares.AuthMiddleware(), userController.UsernameExist)
-		userGroup.GET("/username/:id", userController.Username)
-		userGroup.POST("/profile", middlewares.AuthMiddleware(), userController.UpdateProfile)
-		userGroup.POST("/sign-up", userController.SignUp)
-		userGroup.POST("/free-rinkeby-eth", middlewares.AuthMiddleware(), userController.FreeRinkebyEther)
+        userGroup.POST("/sign-up", userController.SignUp)
+        userGroup.POST("/free-rinkeby-eth", middlewares.AuthMiddleware(), userController.FreeRinkebyEther)
 
-		userGroup.GET("/referred", middlewares.AuthMiddleware(), userController.Referred)
-		userGroup.POST("/complete-profile", middlewares.AuthMiddleware(), userController.CompleteProfile)
-		userGroup.POST("/subscribe", userController.Subscribe)
+        userGroup.GET("/referred", middlewares.AuthMiddleware(), userController.Referred)
+        userGroup.POST("/complete-profile", middlewares.AuthMiddleware(), userController.CompleteProfile)
+        userGroup.POST("/subscribe", userController.Subscribe)
 
-		userGroup.POST("/notification", middlewares.AuthMiddleware(), userController.Notification)
+        userGroup.POST("/notification", middlewares.AuthMiddleware(), userController.Notification)
 
-		userGroup.POST("/verification/phone/start", middlewares.AuthMiddleware(), verificationController.SendPhoneVerification)
-		userGroup.POST("/verification/phone/check", middlewares.AuthMiddleware(), verificationController.CheckPhoneVerification)
-		userGroup.POST("/verification/email/start", middlewares.AuthMiddleware(), verificationController.SendEmailVerification)
-		userGroup.POST("/verification/email/check", middlewares.AuthMiddleware(), verificationController.CheckEmailVerification)
-	}
+        userGroup.POST("/verification/phone/start", middlewares.AuthMiddleware(), verificationController.SendPhoneVerification)
+        userGroup.POST("/verification/phone/check", middlewares.AuthMiddleware(), verificationController.CheckPhoneVerification)
+        userGroup.POST("/verification/email/start", middlewares.AuthMiddleware(), verificationController.SendEmailVerification)
+        userGroup.POST("/verification/email/check", middlewares.AuthMiddleware(), verificationController.CheckEmailVerification)
+    }
 
-	handshakeController := new(controllers.HandshakeController)
-	handshakeGroup := router.Group("handshake")
-	{
-		handshakeGroup.GET("/me", middlewares.AuthMiddleware(), handshakeController.Me)
-		handshakeGroup.GET("/discover", middlewares.AuthMiddleware(), handshakeController.Discover)
-		handshakeGroup.POST("/create", middlewares.AuthMiddleware(), handshakeController.Create)
-		handshakeGroup.POST("/update", middlewares.AuthMiddleware(), handshakeController.Update)
-		handshakeGroup.POST("/delete", middlewares.AuthMiddleware(), handshakeController.Delete)
-	}
+    handshakeController := new(controllers.HandshakeController)
+    handshakeGroup := router.Group("handshake")
+    {
+        handshakeGroup.GET("/me", middlewares.AuthMiddleware(), handshakeController.Me)
+        handshakeGroup.GET("/discover", middlewares.AuthMiddleware(), handshakeController.Discover)
+        handshakeGroup.POST("/create", middlewares.AuthMiddleware(), handshakeController.Create)
+        handshakeGroup.POST("/update", middlewares.AuthMiddleware(), handshakeController.Update)
+        handshakeGroup.POST("/delete", middlewares.AuthMiddleware(), handshakeController.Delete)
+    }
 
-	systemController := new(controllers.SystemController)
-	systemGroup := router.Group("system")
-	{
-		systemGroup.GET("/user/:id", systemController.User)
-		systemGroup.POST("/betsuccess/:id", systemController.BetSuccess)
-	}
 
-	conf := config.GetConfig()
-	for ex, ep := range conf.GetStringMap("forwarding") {
-		endpoint := ep
-		router.Any(ex, middlewares.AuthMiddleware(), func(c *gin.Context) {
-			Forwarding(c, &endpoint, "")
-		})
-		router.Any(ex+"/*path", middlewares.AuthMiddleware(), func(c *gin.Context) {
-			path := c.Param("path")
-			Forwarding(c, &endpoint, path)
-		})
-	}
+    systemController := new(controllers.SystemController)
+    systemGroup := router.Group("system")
+    {
+        systemGroup.GET("/user/:id", systemController.User)
+        systemGroup.POST("/betsuccess/:id", systemController.BetSuccess)
+    }
 
-	router.NoRoute(defaultController.NotFound)
+    conf := config.GetConfig()
+    for ex, ep := range conf.GetStringMap("forwarding") { 
+        endpoint := ep
+        router.Any(ex, middlewares.AuthMiddleware(), func(c *gin.Context) {
+            Forwarding(c, &endpoint, "")
+        })
+        router.Any(ex + "/*path", middlewares.AuthMiddleware(), func(c *gin.Context) {
+            path := c.Param("path")
+            Forwarding(c, &endpoint, path)
+        })
+    }
 
-	return router
+    router.NoRoute(defaultController.NotFound)
+
+    return router
 }
 
 type ForwardingTransport struct {
