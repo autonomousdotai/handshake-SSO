@@ -555,6 +555,7 @@ func ExchangeUpdateProfile(userId uint, username string) {
 	}
 }
 
+// FreeTokenReferrer :
 func FreeTokenReferrer(userId string, refId string, network string) {
 	log.Println("start free token referrer", userId, refId, network)
 	ref := models.User{}
@@ -620,14 +621,34 @@ func FreeTokenReferrer(userId string, refId string, network string) {
 	}
 }
 
-func (u UserController) SubscribeExist(c *gin.Context) {
+// CheckEmailExist :
+func (u UserController) CheckEmailExist(c *gin.Context) {
 
+	var userModel models.User
+
+	user, _ := c.Get("User")
+	userModel = user.(models.User)
+
+	if userModel.Email == "" {
+		resp := JsonResponse{1, "", map[string]interface{}{"email_existed": 0}}
+		c.JSON(http.StatusOK, resp)
+		c.Abort()
+		return
+	}
+
+	resp := JsonResponse{1, "", map[string]interface{}{"email_existed": 1, "email": userModel.Email}}
+	c.JSON(http.StatusOK, resp)
+	c.Abort()
+}
+
+// SubscribeEmail :
+func (u UserController) SubscribeEmail(c *gin.Context) {
 	var data map[string]interface{}
 	var userModel models.User
-	err := c.BindJSON(&data)
+	errParams := c.BindJSON(&data)
 
-	if err != nil {
-		fmt.Println(err)
+	if errParams != nil {
+		fmt.Println(errParams)
 		resp := JsonResponse{0, "Invalid params", nil}
 		c.JSON(http.StatusOK, resp)
 		c.Abort()
@@ -635,11 +656,8 @@ func (u UserController) SubscribeExist(c *gin.Context) {
 	}
 
 	user, _ := c.Get("User")
-	log.Println(user)
 	userModel = user.(models.User)
 	email, hasTo := data["email"]
-
-	fmt.Println(data)
 
 	if !hasTo {
 		resp := JsonResponse{0, "Invalid params", nil}
@@ -648,33 +666,35 @@ func (u UserController) SubscribeExist(c *gin.Context) {
 		return
 	}
 
-	var _u models.User
-	errDb := models.Database().Where("id = ? AND email LIKE ?", userModel.ID, email).First(&_u).Error
-
-	if errDb != nil {
-		resp := JsonResponse{1, "", map[string]interface{}{"email_existed": 0}}
+	errFormal := utils.ValidateFormat(email.(string))
+	if errFormal != nil {
+		resp := JsonResponse{0, "Invalid email.", nil}
 		c.JSON(http.StatusOK, resp)
 		c.Abort()
 		return
 	}
 
-	var md map[string]interface{}
-	if _u.Metadata != "" {
-		json.Unmarshal([]byte(userModel.Metadata), &md)
-	} else {
-		resp := JsonResponse{1, "", map[string]interface{}{"email_verified": 0}}
+	if userModel.Email != "" {
+		resp := JsonResponse{1, "", map[string]interface{}{"email_existed": 1}}
 		c.JSON(http.StatusOK, resp)
 		c.Abort()
 		return
 	}
 
-	if md["verification-code"] == nil {
-		resp := JsonResponse{1, "", map[string]interface{}{"email_verified": 1}}
+	db := models.Database()
+	userModel.Email = email.(string)
+	errSaveDb := db.Save(&userModel).Error
+
+	if errSaveDb != nil {
+		log.Println("Error", errSaveDb.Error())
+		resp := JsonResponse{0, "Update email failed.", nil}
 		c.JSON(http.StatusOK, resp)
 		c.Abort()
-	} else {
-		resp := JsonResponse{1, "", map[string]interface{}{"email_verified": 0}}
-		c.JSON(http.StatusOK, resp)
-		c.Abort()
+		return
 	}
+
+	resp := JsonResponse{1, "", map[string]interface{}{"is_success": 1, "email": userModel.Email}}
+	c.JSON(http.StatusOK, resp)
+	c.Abort()
+
 }
