@@ -19,43 +19,43 @@ import (
 type UserController struct{}
 
 func (u UserController) SignUp(c *gin.Context) {
-    config := config.GetConfig()
-    UUID, passpharse, err := utils.HashNewUID(config.GetString("secret_key"))
-   
-    if err != nil {
-        resp := JsonResponse{0, "Sign up failed", nil}
-        c.JSON(http.StatusOK, resp)
-        return
-    }
+	config := config.GetConfig()
+	UUID, passpharse, err := utils.HashNewUID(config.GetString("secret_key"))
 
-    ref := c.Query("ref")
+	if err != nil {
+		resp := JsonResponse{0, "Sign up failed", nil}
+		c.JSON(http.StatusOK, resp)
+		return
+	}
 
-    db := models.Database()
+	ref := c.Query("ref")
 
-    user := models.User{UUID: UUID, Username: UUID}
-    if ref != "" {
-        refUser := models.User{}
-        refErr := db.Where("username = ?", ref).First(&refUser).Error
+	db := models.Database()
 
-        if refErr == nil {
-            user.RefID = refUser.ID
-        }
-    }
+	user := models.User{UUID: UUID, Username: UUID}
+	if ref != "" {
+		refUser := models.User{}
+		refErr := db.Where("username = ?", ref).First(&refUser).Error
 
-    errDb := db.Create(&user).Error
+		if refErr == nil {
+			user.RefID = refUser.ID
+		}
+	}
 
-    if errDb != nil {
-        resp := JsonResponse{0, "Sign up failed", nil}
-        c.JSON(http.StatusOK, resp)
-        return
-    }
+	errDb := db.Create(&user).Error
 
-    // implement another logic
-    go ExchangeSignUp(user.ID, user.RefID)
+	if errDb != nil {
+		resp := JsonResponse{0, "Sign up failed", nil}
+		c.JSON(http.StatusOK, resp)
+		return
+	}
 
-    resp := JsonResponse{1, "", map[string]interface{}{"passpharse": passpharse}}
-    c.JSON(http.StatusOK, resp)
-    return
+	// implement another logic
+	go ExchangeSignUp(user.ID, user.RefID)
+
+	resp := JsonResponse{1, "", map[string]interface{}{"passpharse": passpharse}}
+	c.JSON(http.StatusOK, resp)
+	return
 }
 
 func (u UserController) Profile(c *gin.Context) {
@@ -132,7 +132,7 @@ func (u UserController) UpdateProfile(c *gin.Context) {
 
 	log.Println(email, name, username, rwas, phone, ft)
 
-    oldUsername := userModel.Username
+	oldUsername := userModel.Username
 
 	if email != "_" {
 		userModel.Email = email
@@ -185,10 +185,10 @@ func (u UserController) UpdateProfile(c *gin.Context) {
 		return
 	}
 
-    // implement another logic
-    if oldUsername != userModel.Username {
-        go ExchangeUpdateProfile(userModel.ID, userModel.Username)
-    }
+	// implement another logic
+	if oldUsername != userModel.Username {
+		go ExchangeUpdateProfile(userModel.ID, userModel.Username)
+	}
 
 	userModel.UUID = ""
 	log.Println(userModel)
@@ -196,65 +196,64 @@ func (u UserController) UpdateProfile(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
-func (u UserController) FreeRinkebyEther(c *gin.Context) {  
-    var userModel models.User
-    user, _ := c.Get("User")
-    userModel = user.(models.User)
-   
-    address := c.DefaultQuery("address", "_")
+func (u UserController) FreeRinkebyEther(c *gin.Context) {
+	var userModel models.User
+	user, _ := c.Get("User")
+	userModel = user.(models.User)
 
-    if address == "_" {
-        resp := JsonResponse{0, "Invalid address", nil}
-        c.JSON(http.StatusOK, resp)
-        c.Abort()
-        return;
-    }
+	address := c.DefaultQuery("address", "_")
 
-    var md map[string]interface{}
-    if userModel.Metadata != "" { 
-        json.Unmarshal([]byte(userModel.Metadata), &md)   
-    } else {
-        md = map[string]interface{}{}
-    }
+	if address == "_" {
+		resp := JsonResponse{0, "Invalid address", nil}
+		c.JSON(http.StatusOK, resp)
+		c.Abort()
+		return
+	}
 
+	var md map[string]interface{}
+	if userModel.Metadata != "" {
+		json.Unmarshal([]byte(userModel.Metadata), &md)
+	} else {
+		md = map[string]interface{}{}
+	}
 
-    var status bool
-    var message string
-    shouldRequest := false
+	var status bool
+	var message string
+	shouldRequest := false
 
-    rinkeby, ok := md["free-rinkeby"]
-    if ok {
-        status = false
-        message = fmt.Sprintf("Your free eth transaction is %s", rinkeby.(map[string]interface{})["hash"])
-    } else {
-        shouldRequest = true
-    }
+	rinkeby, ok := md["free-rinkeby"]
+	if ok {
+		status = false
+		message = fmt.Sprintf("Your free eth transaction is %s", rinkeby.(map[string]interface{})["hash"])
+	} else {
+		shouldRequest = true
+	}
 
-    if shouldRequest {
-        value := "1"
-        status, message = ethereumService.FreeEther(fmt.Sprint(userModel.ID), address, value, "rinkeby")
-        if status {
-            md["free-rinkeby"] = map[string]interface{}{
-                "address": address,
-                "value": value,
-                "hash": message,
-                "time": time.Now().UTC().Unix(), 
-            }
-        
-            metadata, _ := json.Marshal(md)
-            userModel.Metadata = string(metadata)
-            dbErr := models.Database().Save(&userModel).Error
-            if dbErr != nil {
-                status = false
-                message = dbErr.Error()
-            } else {
-                status = true
-            } 
-        }
-    }
-   
-    resp := JsonResponse{1, message, status}
-    c.JSON(http.StatusOK, resp)
+	if shouldRequest {
+		value := "1"
+		status, message = ethereumService.FreeEther(fmt.Sprint(userModel.ID), address, value, "rinkeby")
+		if status {
+			md["free-rinkeby"] = map[string]interface{}{
+				"address": address,
+				"value":   value,
+				"hash":    message,
+				"time":    time.Now().UTC().Unix(),
+			}
+
+			metadata, _ := json.Marshal(md)
+			userModel.Metadata = string(metadata)
+			dbErr := models.Database().Save(&userModel).Error
+			if dbErr != nil {
+				status = false
+				message = dbErr.Error()
+			} else {
+				status = true
+			}
+		}
+	}
+
+	resp := JsonResponse{1, message, status}
+	c.JSON(http.StatusOK, resp)
 }
 
 func (u UserController) CompleteProfile(c *gin.Context) {
@@ -405,7 +404,7 @@ func (u UserController) Subscribe(c *gin.Context) {
 	product_type := c.DefaultPostForm("type", "_")
 
 	err := utils.ValidateFormat(email)
-	if err != nil{
+	if err != nil {
 		resp := JsonResponse{0, "Invalid email.", nil}
 		c.JSON(http.StatusOK, resp)
 		c.Abort()
@@ -512,48 +511,48 @@ func (u UserController) Notification(c *gin.Context) {
 }
 
 func ExchangeSignUp(userId uint, refId uint) {
-    jsonData := make(map[string]interface{})
-    jsonData["id"] = userId
-    jsonData["refId"] = refId
+	jsonData := make(map[string]interface{})
+	jsonData["id"] = userId
+	jsonData["refId"] = refId
 
-    endpoint, found := utils.GetForwardingEndpoint("exchange")
-    log.Println(endpoint, found)
-    jsonValue, _ := json.Marshal(jsonData)
-  
-    endpoint = fmt.Sprintf("%s/%s", endpoint, "user/profile")
-    
-    request, _ := http.NewRequest("POST", endpoint, bytes.NewBuffer(jsonValue))
-    request.Header.Set("Content-Type", "application/json")
-    
-    client := &http.Client{}
-    _, err := client.Do(request)
-    if err != nil {
-        log.Println("call exchange failed ", err)
-    } else {
-        log.Println("call exchange on SignUp success")
-    }
+	endpoint, found := utils.GetForwardingEndpoint("exchange")
+	log.Println(endpoint, found)
+	jsonValue, _ := json.Marshal(jsonData)
+
+	endpoint = fmt.Sprintf("%s/%s", endpoint, "user/profile")
+
+	request, _ := http.NewRequest("POST", endpoint, bytes.NewBuffer(jsonValue))
+	request.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	_, err := client.Do(request)
+	if err != nil {
+		log.Println("call exchange failed ", err)
+	} else {
+		log.Println("call exchange on SignUp success")
+	}
 }
 
 func ExchangeUpdateProfile(userId uint, username string) {
-    jsonData := make(map[string]interface{})
-    jsonData["id"] = userId
+	jsonData := make(map[string]interface{})
+	jsonData["id"] = userId
 
-    endpoint, found := utils.GetForwardingEndpoint("exchange")
-    log.Println(endpoint, found)
-    jsonValue, _ := json.Marshal(jsonData)
-  
-    endpoint = fmt.Sprintf("%s/%s?alias=%s", endpoint, "user/profile", username)
-    
-    request, _ := http.NewRequest("PUT", endpoint, bytes.NewBuffer(jsonValue))
-    request.Header.Set("Content-Type", "application/json")
-    
-    client := &http.Client{}
-    _, err := client.Do(request)
-    if err != nil {
-        log.Println("call exchange failed ", err)
-    } else {
-        log.Println("call exchange on SignUp success")
-    }
+	endpoint, found := utils.GetForwardingEndpoint("exchange")
+	log.Println(endpoint, found)
+	jsonValue, _ := json.Marshal(jsonData)
+
+	endpoint = fmt.Sprintf("%s/%s?alias=%s", endpoint, "user/profile", username)
+
+	request, _ := http.NewRequest("PUT", endpoint, bytes.NewBuffer(jsonValue))
+	request.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	_, err := client.Do(request)
+	if err != nil {
+		log.Println("call exchange failed ", err)
+	} else {
+		log.Println("call exchange on SignUp success")
+	}
 }
 
 func FreeTokenReferrer(userId string, refId string, network string) {
@@ -618,5 +617,64 @@ func FreeTokenReferrer(userId string, refId string, network string) {
 				}
 			}
 		}
+	}
+}
+
+func (u UserController) SubscribeExist(c *gin.Context) {
+
+	var data map[string]interface{}
+	var userModel models.User
+	err := c.BindJSON(&data)
+
+	if err != nil {
+		fmt.Println(err)
+		resp := JsonResponse{0, "Invalid params", nil}
+		c.JSON(http.StatusOK, resp)
+		c.Abort()
+		return
+	}
+
+	user, _ := c.Get("User")
+	log.Println(user)
+	userModel = user.(models.User)
+	email, hasTo := data["email"]
+
+	fmt.Println(data)
+
+	if !hasTo {
+		resp := JsonResponse{0, "Invalid params", nil}
+		c.JSON(http.StatusOK, resp)
+		c.Abort()
+		return
+	}
+
+	var _u models.User
+	errDb := models.Database().Where("id = ? AND email LIKE ?", userModel.ID, email).First(&_u).Error
+
+	if errDb != nil {
+		resp := JsonResponse{1, "", map[string]interface{}{"email_existed": 0}}
+		c.JSON(http.StatusOK, resp)
+		c.Abort()
+		return
+	}
+
+	var md map[string]interface{}
+	if _u.Metadata != "" {
+		json.Unmarshal([]byte(userModel.Metadata), &md)
+	} else {
+		resp := JsonResponse{1, "", map[string]interface{}{"email_verified": 0}}
+		c.JSON(http.StatusOK, resp)
+		c.Abort()
+		return
+	}
+
+	if md["verification-code"] == nil {
+		resp := JsonResponse{1, "", map[string]interface{}{"email_verified": 1}}
+		c.JSON(http.StatusOK, resp)
+		c.Abort()
+	} else {
+		resp := JsonResponse{1, "", map[string]interface{}{"email_verified": 0}}
+		c.JSON(http.StatusOK, resp)
+		c.Abort()
 	}
 }
