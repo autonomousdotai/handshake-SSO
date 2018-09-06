@@ -621,7 +621,7 @@ func FreeTokenReferrer(userId string, refId string, network string) {
 	}
 }
 
-// CheckEmailExist :
+// CheckEmailExist : check email exist in system or not
 func (u UserController) CheckEmailExist(c *gin.Context) {
 
 	var userModel models.User
@@ -630,18 +630,18 @@ func (u UserController) CheckEmailExist(c *gin.Context) {
 	userModel = user.(models.User)
 
 	if userModel.Email == "" {
-		resp := JsonResponse{1, "", map[string]interface{}{"email_existed": 0}}
+		resp := JsonResponse{0, "", map[string]interface{}{"email_existed": 0}}
 		c.JSON(http.StatusOK, resp)
 		c.Abort()
 		return
 	}
 
-	resp := JsonResponse{1, "", map[string]interface{}{"email_existed": 1, "email": userModel.Email}}
+	resp := JsonResponse{1, "", map[string]interface{}{"email_existed": 1}}
 	c.JSON(http.StatusOK, resp)
 	c.Abort()
 }
 
-// SubscribeEmail :
+// SubscribeEmail : user input their email and no need to receive verification code, that step may be later
 func (u UserController) SubscribeEmail(c *gin.Context) {
 	var data map[string]interface{}
 	var userModel models.User
@@ -675,7 +675,7 @@ func (u UserController) SubscribeEmail(c *gin.Context) {
 	}
 
 	if userModel.Email != "" {
-		resp := JsonResponse{1, "", map[string]interface{}{"email_existed": 1}}
+		resp := JsonResponse{0, "Email has existed already!", map[string]interface{}{"is_success": 0}}
 		c.JSON(http.StatusOK, resp)
 		c.Abort()
 		return
@@ -693,7 +693,7 @@ func (u UserController) SubscribeEmail(c *gin.Context) {
 		return
 	}
 
-	resp := JsonResponse{1, "", map[string]interface{}{"is_success": 1, "email": userModel.Email}}
+	resp := JsonResponse{1, "", map[string]interface{}{"is_success": 1}}
 	c.JSON(http.StatusOK, resp)
 	c.Abort()
 
