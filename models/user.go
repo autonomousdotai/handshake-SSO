@@ -1,10 +1,7 @@
 package models
 
 import (
-	"fmt"
-
 	_ "github.com/jinzhu/gorm"
-	"github.com/ninjadotorg/handshake-dispatcher/services"
 )
 
 type User struct {
@@ -27,25 +24,4 @@ type User struct {
 
 func (u User) TableName() string {
 	return "user"
-}
-
-var cryptosignService = new(services.CryptosignService)
-
-// AfterCreate :
-func (u *User) AfterCreate() {
-	fmt.Println("Create")
-	cryptosignService.UserModelHooks("Create", u.ID, u.Metadata, u.Email)
-}
-
-// AfterUpdate :
-func (u *User) AfterUpdate() {
-	fmt.Println("Update")
-	cryptosignService.UserModelHooks("Update", u.ID, u.Metadata, u.Email)
-}
-
-// AfterDelete :
-func (u *User) AfterDelete() (err error) {
-	fmt.Println("Delete")
-	cryptosignService.UserModelHooks("Delete", u.ID, u.Metadata, u.Email)
-	return
 }
