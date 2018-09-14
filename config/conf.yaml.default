@@ -14,3 +14,5 @@ services:
     fcm: http://localhost:8089
     storage: http://localhost:8090
     twilio: https://api.authy.com
+user_hook_services:
+    cryptosign: http://localhost:5000/user/hook/dispatcher

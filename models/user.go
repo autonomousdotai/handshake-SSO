@@ -2,6 +2,7 @@ package models
 
 import (
 	_ "github.com/jinzhu/gorm"
+	"github.com/ninjadotorg/handshake-dispatcher/services"
 )
 
 type User struct {
@@ -25,3 +26,21 @@ type User struct {
 func (u User) TableName() string {
 	return "user"
 }
+
+var hookService = new(services.HookService)
+
+// AfterUpdate :
+func (u *User) AfterUpdate() {
+	hookService.UserModelHooks("Update", u.ID, u.Metadata, u.Email)
+}
+
+// // AfterDelete :
+// func (u *User) AfterDelete() (err error) {
+//	hookService.UserModelHooks("Delete", u.ID, u.Metadata, u.Email)
+//     return
+// }
+
+// // AfterCreate :
+// func (u *User) AfterCreate() {
+//	hookService.UserModelHooks("Create", u.ID, u.Metadata, u.Email)
+// }
