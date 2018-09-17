@@ -1,6 +1,8 @@
 package models
 
 import (
+	"log"
+
 	_ "github.com/jinzhu/gorm"
 	"github.com/ninjadotorg/handshake-dispatcher/services"
 )
@@ -31,6 +33,7 @@ var hookService = new(services.HookService)
 
 // AfterUpdate :
 func (u *User) AfterUpdate() {
+	log.Println("Hook user AfterUpdate")
 	hookService.UserModelHooks("Update", u.ID, u.Metadata, u.Email)
 }
 
