@@ -1,8 +1,6 @@
 package models
 
 import (
-	"log"
-
 	_ "github.com/jinzhu/gorm"
 	"github.com/ninjadotorg/handshake-dispatcher/services"
 )
@@ -32,10 +30,10 @@ func (u User) TableName() string {
 var hookService = new(services.HookService)
 
 // AfterUpdate :
-func (u *User) AfterUpdate() {
-	log.Println("Hook user AfterUpdate")
-	hookService.UserModelHooks("Update", u.ID, u.Metadata, u.Email)
-}
+// func (u *User) AfterUpdate() {
+// 	log.Println("Hook user AfterUpdate")
+// 	hookService.UserModelHooks("Update", u.ID, u.Metadata, u.Email)
+// }
 
 // // AfterDelete :
 // func (u *User) AfterDelete() (err error) {
