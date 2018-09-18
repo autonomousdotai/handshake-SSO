@@ -29,11 +29,11 @@ func (u User) TableName() string {
 
 var hookService = new(services.HookService)
 
-// AfterUpdate :
-// func (u *User) AfterUpdate() {
-// 	log.Println("Hook user AfterUpdate")
-// 	hookService.UserModelHooks("Update", u.ID, u.Metadata, u.Email)
-// }
+AfterUpdate :
+func (u *User) AfterUpdate() {
+	log.Println("Hook user AfterUpdate")
+	hookService.UserModelHooks("Update", u.ID, u.Metadata, u.Email)
+}
 
 // // AfterDelete :
 // func (u *User) AfterDelete() (err error) {
