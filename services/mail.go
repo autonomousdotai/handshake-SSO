@@ -171,7 +171,7 @@ func (s MailService) SendWalletEmail(email string) {
 	    See you there!<br/>Team Ninja`, endpoint, endpoint, endpoint)
 
 	status, err := s.Send("dojo@ninja.org", email, subject, body)
-	log.Println("Send prediction mail status", status, err)
+	log.Println("Send wallet mail status", status, err)
 }
 
 func (s MailService) SendWhisperEmail(email string) {
@@ -184,5 +184,17 @@ func (s MailService) SendWhisperEmail(email string) {
 	    Speak soon,<br/>Team Ninja`, endpoint, endpoint, endpoint)
 
 	status, err := s.Send("dojo@ninja.org", email, subject, body)
-	log.Println("Send prediction mail status", status, err)
+	log.Println("Send whisper mail status", status, err)
+}
+
+// SendChromeExtensionEmail : send email for user who subcribe chrome extension product
+func (s MailService) SendChromeExtensionEmail(email string) {
+	subject := `Hello from the Ninja Predicts team!`
+	body := fmt.Sprintf(`Hey Ninja!,<br/><br/>
+		We can’t wait to show you our shiny new chrome extension - we think it’ll be a lot of fun! When it goes live, you’ll be the very first to know.<br/>
+		You look like a winner ;) <br/><br/>
+	    Speak soon,<br/>Ninja`)
+
+	status, err := s.Send("dojo@ninja.org", email, subject, body)
+	log.Println("Send chrome extension mail status", status, err)
 }

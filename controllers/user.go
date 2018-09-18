@@ -444,6 +444,8 @@ func (u UserController) Subscribe(c *gin.Context) {
 		go mailService.SendWalletEmail(email)
 	case "whisper":
 		go mailService.SendWhisperEmail(email)
+	case "chrome_extension":
+		go mailService.SendChromeExtensionEmail(email)
 	}
 
 	c.JSON(http.StatusOK, resp)
