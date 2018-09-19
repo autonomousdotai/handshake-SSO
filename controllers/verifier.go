@@ -1,15 +1,16 @@
 package controllers
 
 import (
-	"github.com/gin-gonic/gin"
-	"net/http"
-    "encoding/json"
-    "time"
-    "log"
+	"encoding/json"
 	"fmt"
-    "github.com/ninjadotorg/handshake-dispatcher/utils"
+	"log"
+	"net/http"
+	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/ninjadotorg/handshake-dispatcher/models"
 	"github.com/ninjadotorg/handshake-dispatcher/services"
-    "github.com/ninjadotorg/handshake-dispatcher/models"
+	"github.com/ninjadotorg/handshake-dispatcher/utils"
 )
 
 type VerifierController struct{}
@@ -58,99 +59,98 @@ func (s VerifierController) CheckPhoneVerification(c *gin.Context) {
 
 func (s VerifierController) SendEmailVerification(c *gin.Context) {
 	email := c.DefaultQuery("email", "")
-	// locale := c.DefaultQuery("locale", "en")
 
-    code := utils.RandomVerificationCode()
-
-    var userModel models.User
-    user, _ := c.Get("User")
-    userModel = user.(models.User)
-
-    var md map[string]interface{}
-    if userModel.Metadata != "" { 
-        json.Unmarshal([]byte(userModel.Metadata), &md)   
-    } else {
-        md = map[string]interface{}{}
-    }
-
-    md["verification-code"] = map[string]interface{}{
-        "time": time.Now(),
-        "code": code,
-    }
-
-    metadata, _ := json.Marshal(md)
-    userModel.Metadata = string(metadata)
-    dbErr := models.Database().Save(&userModel).Error
-    if dbErr != nil {
-        log.Println("Send verification failed", dbErr.Error())
-        resp := JsonResponse{0, "Send verification failed", nil}
+	err := utils.ValidateFormat(email)
+	if err != nil {
+		resp := JsonResponse{0, "Invalid email", nil}
 		c.JSON(http.StatusOK, resp)
 		c.Abort()
-        return;
-    }
+		return
+	}
+
+	code := utils.RandomVerificationCode()
+
+	var userModel models.User
+	user, _ := c.Get("User")
+	userModel = user.(models.User)
+
+	var md map[string]interface{}
+	if userModel.Metadata != "" {
+		json.Unmarshal([]byte(userModel.Metadata), &md)
+	} else {
+		md = map[string]interface{}{}
+	}
+
+	md["verification-code"] = map[string]interface{}{
+		"time": time.Now(),
+		"code": code,
+	}
+
+	metadata, _ := json.Marshal(md)
+	userModel.Metadata = string(metadata)
+	userModel.Email = email
+	dbErr := models.Database().Save(&userModel).Error
+	if dbErr != nil {
+		log.Println("Send verification failed", dbErr.Error())
+		resp := JsonResponse{0, "Send verification failed", nil}
+		c.JSON(http.StatusOK, resp)
+		c.Abort()
+		return
+	}
 
 	mailClient := services.MailService{}
 
 	subject := "Email verification"
 	content := fmt.Sprintf(EMAIL_VERIFICATION_TEMPLATE, fmt.Sprint(code))
 
-	success, err := mailClient.Send("dojo@ninja.org", email, subject, content)
-
-	if err != nil || !success {
-		resp := JsonResponse{0, "Send verification failed", nil}
-		c.JSON(http.StatusOK, resp)
-		c.Abort()
-        return;
-	}
-
+	go mailClient.Send("dojo@ninja.org", email, subject, content)
 	resp := JsonResponse{1, "", nil}
 	c.JSON(http.StatusOK, resp)
 }
 
 func (s VerifierController) CheckEmailVerification(c *gin.Context) {
-    email := c.DefaultQuery("email", "")
-    code := c.DefaultQuery("code", "")
+	email := c.DefaultQuery("email", "")
+	code := c.DefaultQuery("code", "")
 
-    var userModel models.User
-    user, _ := c.Get("User")
-    userModel = user.(models.User)
+	var userModel models.User
+	user, _ := c.Get("User")
+	userModel = user.(models.User)
 
-    var md map[string]interface{}
-    if userModel.Metadata != "" { 
-        json.Unmarshal([]byte(userModel.Metadata), &md)   
-    } else {
-        md = map[string]interface{}{}
-    }
+	var md map[string]interface{}
+	if userModel.Metadata != "" {
+		json.Unmarshal([]byte(userModel.Metadata), &md)
+	} else {
+		md = map[string]interface{}{}
+	}
 
-    verificationCode, hasCode := md["verification-code"]
+	verificationCode, hasCode := md["verification-code"]
 
-    if !hasCode {
-        resp := JsonResponse{0, "Email verified failed", nil}
-        c.JSON(http.StatusOK, resp) 
-        c.Abort()
-        return;
-    }
+	if !hasCode {
+		resp := JsonResponse{0, "Email verified failed", nil}
+		c.JSON(http.StatusOK, resp)
+		c.Abort()
+		return
+	}
 
-    realCode := (verificationCode.(map[string]interface{}))["code"]
-    if fmt.Sprint(realCode) != fmt.Sprint(code) {
-        resp := JsonResponse{0, "Email verified failed", nil}
-        c.JSON(http.StatusOK, resp) 
-        c.Abort()
-        return;
-    }
+	realCode := (verificationCode.(map[string]interface{}))["code"]
+	if fmt.Sprint(realCode) != fmt.Sprint(code) {
+		resp := JsonResponse{0, "Email verified failed", nil}
+		c.JSON(http.StatusOK, resp)
+		c.Abort()
+		return
+	}
 
-    
-    delete(md, "verification-code")
-    metadata, _ := json.Marshal(md)
-    userModel.Metadata = string(metadata)
-    userModel.Email = email
-    dbErr := models.Database().Save(&userModel).Error
-    if dbErr != nil {
-        resp := JsonResponse{0, "Email verified failed", nil}
-        c.JSON(http.StatusOK, resp) 
-        c.Abort()
-        return;
-    }
+	delete(md, "verification-code")
+	metadata, _ := json.Marshal(md)
+	userModel.Metadata = string(metadata)
+	userModel.Email = email
+	dbErr := models.Database().Save(&userModel).Error
+	if dbErr != nil {
+		resp := JsonResponse{0, "Email verified failed", nil}
+		c.JSON(http.StatusOK, resp)
+		c.Abort()
+		return
+	}
 
 	resp := JsonResponse{1, "", nil}
 	c.JSON(http.StatusOK, resp)
