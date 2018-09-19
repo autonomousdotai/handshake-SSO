@@ -59,6 +59,7 @@ func (s VerifierController) CheckPhoneVerification(c *gin.Context) {
 
 func (s VerifierController) SendEmailVerification(c *gin.Context) {
 	email := c.DefaultQuery("email", "")
+	isNeedEmail := c.DefaultQuery("isNeedEmail", "1")
 
 	err := utils.ValidateFormat(email)
 	if err != nil {
@@ -103,7 +104,10 @@ func (s VerifierController) SendEmailVerification(c *gin.Context) {
 	subject := "Email verification"
 	content := fmt.Sprintf(EMAIL_VERIFICATION_TEMPLATE, fmt.Sprint(code))
 
-	go mailClient.Send("dojo@ninja.org", email, subject, content)
+	if isNeedEmail == "1" {
+		go mailClient.Send("dojo@ninja.org", email, subject, content)
+	}
+
 	resp := JsonResponse{1, "", nil}
 	c.JSON(http.StatusOK, resp)
 }
