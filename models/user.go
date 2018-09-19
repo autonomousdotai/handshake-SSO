@@ -36,14 +36,3 @@ func (u *User) AfterUpdate() {
 	log.Println("Hook user AfterUpdate")
 	hookService.UserModelHooks("Update", u.ID, u.Metadata, u.Email)
 }
-
-// // AfterDelete :
-// func (u *User) AfterDelete() (err error) {
-//	hookService.UserModelHooks("Delete", u.ID, u.Metadata, u.Email)
-//     return
-// }
-
-// // AfterCreate :
-// func (u *User) AfterCreate() {
-//	hookService.UserModelHooks("Create", u.ID, u.Metadata, u.Email)
-// }

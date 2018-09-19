@@ -63,8 +63,6 @@ func NewRouter() *gin.Engine {
 		userGroup.POST("/subscribe", userController.Subscribe)
 
 		userGroup.GET("/check-email-exist", middlewares.AuthMiddleware(), userController.CheckEmailExist)
-		userGroup.POST("/subscribe-email", middlewares.AuthMiddleware(), userController.SubscribeEmail)
-
 		userGroup.POST("/notification", middlewares.AuthMiddleware(), userController.Notification)
 
 		userGroup.POST("/verification/phone/start", middlewares.AuthMiddleware(), verificationController.SendPhoneVerification)
