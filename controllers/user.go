@@ -408,6 +408,7 @@ func (u UserController) Subscribe(c *gin.Context) {
 		resp := JsonResponse{0, "Invalid email.", nil}
 		c.JSON(http.StatusOK, resp)
 		c.Abort()
+		return
 	}
 
 	if email != "_" {
