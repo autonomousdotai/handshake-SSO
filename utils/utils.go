@@ -59,7 +59,7 @@ func ValidateHost(email string) error {
 
 	t := time.AfterFunc(forceDisconnectAfter, func() { client.Close() })
 	defer t.Stop()
-  
+
 	err = client.Hello("checkmail.me")
 	if err != nil {
 		return NewSmtpError(err)
@@ -80,4 +80,16 @@ func split(email string) (account, host string) {
 	account = email[:i]
 	host = email[i+1:]
 	return
+}
+
+// ValidateProduct : product
+func ValidateProduct(product string) (valid bool) {
+	products := []string{"prediction", "cash", "wallet", "whisper", "chrome_extension", "become-atm"}
+	for _, p := range products {
+		if p == product {
+			valid = true
+			return
+		}
+	}
+	return false
 }

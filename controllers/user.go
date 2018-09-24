@@ -12,6 +12,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/ninjadotorg/handshake-dispatcher/config"
+	"github.com/ninjadotorg/handshake-dispatcher/daos"
 	"github.com/ninjadotorg/handshake-dispatcher/models"
 	"github.com/ninjadotorg/handshake-dispatcher/utils"
 )
@@ -401,7 +402,7 @@ func (u UserController) Subscribe(c *gin.Context) {
 	var userModel models.SubscribedUser
 	email := c.DefaultPostForm("email", "_")
 	product := c.DefaultPostForm("product", "_")
-	product_type := c.DefaultPostForm("type", "_")
+	productType := c.DefaultPostForm("type", "_")
 
 	err := utils.ValidateFormat(email)
 	if err != nil {
@@ -418,8 +419,8 @@ func (u UserController) Subscribe(c *gin.Context) {
 		userModel.Product = product
 	}
 
-	if product_type != "_" {
-		userModel.ProductType = product_type
+	if productType != "_" {
+		userModel.ProductType = productType
 	}
 
 	db := models.Database()
@@ -449,6 +450,30 @@ func (u UserController) Subscribe(c *gin.Context) {
 		go mailService.SendChromeExtensionEmail(email)
 	}
 
+	c.JSON(http.StatusOK, resp)
+}
+
+// CountSubscribedUsers : count how many user subscribed a product
+func (u UserController) CountSubscribedUsers(c *gin.Context) {
+	product := c.DefaultPostForm("product", "")
+
+	if !utils.ValidateProduct(product) {
+		resp := JsonResponse{0, "Invalid product.", nil}
+		c.JSON(http.StatusOK, resp)
+		c.Abort()
+		return
+	}
+
+	var userDAO = &daos.SubscribedUserDAO{}
+	count, err := userDAO.CountUsersByProduct(product)
+	if err != nil {
+		resp := JsonResponse{0, err.Error(), nil}
+		c.JSON(http.StatusOK, resp)
+		c.Abort()
+		return
+	}
+
+	resp := JsonResponse{1, "", count}
 	c.JSON(http.StatusOK, resp)
 }
 

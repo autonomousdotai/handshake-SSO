@@ -61,6 +61,7 @@ func NewRouter() *gin.Engine {
 		userGroup.GET("/referred", middlewares.AuthMiddleware(), userController.Referred)
 		userGroup.POST("/complete-profile", middlewares.AuthMiddleware(), userController.CompleteProfile)
 		userGroup.POST("/subscribe", userController.Subscribe)
+		userGroup.POST("/count_subscribed_user", userController.CountSubscribedUsers)
 
 		userGroup.GET("/check-email-exist", middlewares.AuthMiddleware(), userController.CheckEmailExist)
 		userGroup.POST("/notification", middlewares.AuthMiddleware(), userController.Notification)
