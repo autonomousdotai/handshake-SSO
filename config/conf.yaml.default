@@ -16,3 +16,5 @@ services:
     twilio: https://api.authy.com
 user_hook_services:
     cryptosign: http://localhost:5000/user/hook/dispatcher
+white_endpoints:
+    - /xx/xx/xx

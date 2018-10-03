@@ -1,40 +1,58 @@
 package middlewares
 
 import (
-    "strings"
+	"fmt"
+	"strings"
 
-    "github.com/gin-gonic/gin"
-    "github.com/ninjadotorg/handshake-dispatcher/config"
-    "github.com/ninjadotorg/handshake-dispatcher/utils"
-    "github.com/ninjadotorg/handshake-dispatcher/models"
+	"github.com/spf13/viper"
+
+	"github.com/gin-gonic/gin"
+	"github.com/ninjadotorg/handshake-dispatcher/config"
+	"github.com/ninjadotorg/handshake-dispatcher/models"
+	"github.com/ninjadotorg/handshake-dispatcher/utils"
 )
 
+func isWhiteEndpoint(conf *viper.Viper, url string) bool {
+	for _, v := range conf.GetStringSlice("white_endpoints") {
+		fmt.Println("DTHTRONG ", v, url)
+		if v == url {
+			return true
+		}
+	}
+	return false
+}
+
+// AuthMiddleware : verify valid user or not
 func AuthMiddleware() gin.HandlerFunc {
-    return func(c *gin.Context) {
-        conf := config.GetConfig()
-        payload := c.Request.Header.Get("Payload")
+	return func(c *gin.Context) {
+		conf := config.GetConfig()
+		if !isWhiteEndpoint(conf, c.Request.URL.Path) {
+			payload := c.Request.Header.Get("Payload")
 
-        p := strings.TrimSpace(payload)
+			p := strings.TrimSpace(payload)
 
-        if len(p) == 0 {
-            panic("Invalid user.")
-        }
-       
-        bkey := []byte(conf.GetString("secret_key"))
-        uuid, err := utils.HashDecrypt(bkey, p)
-       
-        if err != nil {
-            panic("Invalid user.")
-        }
+			if len(p) == 0 {
+				panic("Invalid user.")
+			}
 
-        user := models.User{}
-        errDb := models.Database().Where("uuid = ?", uuid).First(&user).Error
-        
-        if errDb != nil {
-            panic("Invalid user.")    
-        }
-        
-        c.Set("User", user)
-        c.Next()
-    }
+			bkey := []byte(conf.GetString("secret_key"))
+			uuid, err := utils.HashDecrypt(bkey, p)
+
+			if err != nil {
+				panic("Invalid user.")
+			}
+
+			user := models.User{}
+			errDb := models.Database().Where("uuid = ?", uuid).First(&user).Error
+
+			if errDb != nil {
+				panic("Invalid user.")
+			}
+			c.Set("User", user)
+		} else {
+			c.Set("WhiteUser", 1)
+		}
+
+		c.Next()
+	}
 }

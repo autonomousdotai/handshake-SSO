@@ -135,6 +135,7 @@ func Forwarding(c *gin.Context, endpoint *interface{}, path string) {
 	w := c.Writer
 
 	user, _ := c.Get("User")
+	whiteEnp, _ := c.Get("WhiteUser")
 
 	url, _ := url.Parse((*endpoint).(string) + path)
 	director := func(req *http.Request) {
@@ -146,8 +147,11 @@ func Forwarding(c *gin.Context, endpoint *interface{}, path string) {
 			v := c.GetHeader(k)
 			req.Header.Set(k, v)
 		}
-		req.Header.Set("Uid", strconv.FormatUint(uint64((user.(models.User)).ID), 10))
-		req.Header.Set("Fcm-Token", (user.(models.User)).FCMToken)
+		if whiteEnp != 1 {
+			req.Header.Set("Uid", strconv.FormatUint(uint64((user.(models.User)).ID), 10))
+			req.Header.Set("Fcm-Token", (user.(models.User)).FCMToken)
+		}
+
 	}
 	proxy := &httputil.ReverseProxy{Director: director}
 	proxy.Transport = &ForwardingTransport{}
