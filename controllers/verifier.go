@@ -11,6 +11,7 @@ import (
 	"github.com/ninjadotorg/handshake-dispatcher/models"
 	"github.com/ninjadotorg/handshake-dispatcher/services"
 	"github.com/ninjadotorg/handshake-dispatcher/utils"
+	"github.com/ninjadotorg/handshake-dispatcher/config"
 )
 
 type VerifierController struct{}
@@ -158,6 +159,36 @@ func (s VerifierController) CheckEmailVerification(c *gin.Context) {
 
 	resp := JsonResponse{1, "", nil}
 	c.JSON(http.StatusOK, resp)
+}
+
+func (s VerifierController) CheckRedeemCodeVerification(c *gin.Context) {
+	code := c.DefaultQuery("code", "")
+
+	conf := config.GetConfig()
+	apiVerifyRedeemCode := conf.GetString("autonomous_api")
+
+	endpoint := apiVerifyRedeemCode + "promotion-program-api/verify-promotion-code?promotion_code=%s"
+	uri := fmt.Sprintf(endpoint, code)
+
+	request, _ := http.NewRequest("POST", uri, "")
+
+	client := &http.Client{}
+	response, err := client.Do(request)
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+
+	b, _ := ioutil.ReadAll(response.Body)
+
+	var data map[string]interface{}
+	json.Unmarshal(b, &data)
+
+	fmt.Println(data)
+
+	success = data["success"].(bool)
+
+	return
 }
 
 const EMAIL_VERIFICATION_TEMPLATE = `<html>
