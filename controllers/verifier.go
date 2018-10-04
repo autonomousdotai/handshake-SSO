@@ -6,7 +6,7 @@ import (
 	"log"
 	"net/http"
 	"time"
-
+	"io/ioutil"
 	"github.com/gin-gonic/gin"
 	"github.com/ninjadotorg/handshake-dispatcher/models"
 	"github.com/ninjadotorg/handshake-dispatcher/services"
@@ -170,7 +170,7 @@ func (s VerifierController) CheckRedeemCodeVerification(c *gin.Context) {
 	endpoint := apiVerifyRedeemCode + "promotion-program-api/verify-promotion-code?promotion_code=%s"
 	uri := fmt.Sprintf(endpoint, code)
 
-	request, _ := http.NewRequest("POST", uri, "")
+	request, _ := http.NewRequest("POST", uri, nil)
 
 	client := &http.Client{}
 	response, err := client.Do(request)
@@ -184,11 +184,7 @@ func (s VerifierController) CheckRedeemCodeVerification(c *gin.Context) {
 	var data map[string]interface{}
 	json.Unmarshal(b, &data)
 
-	fmt.Println(data)
-
-	success = data["success"].(bool)
-
-	return
+	c.JSON(http.StatusOK, data)
 }
 
 const EMAIL_VERIFICATION_TEMPLATE = `<html>
