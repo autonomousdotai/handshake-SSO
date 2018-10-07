@@ -20,6 +20,7 @@ type User struct {
 	WalletAddresses       string `gorm:"column:wallet_addresses;size:1000" json:"wallet_addresses"`
 	Metadata              string `gorm:"column:metadata;size:5000" json:"-"`
 	FCMToken              string `gorm:"column:fcm_token;size:200" json:"fcm_token"`
+	IDVerified            int    `gorm:"column:id_verified;default:0" json:"id_verified"`
 	RefID                 uint   `gorm:"column:ref_id;" json:"-"`
 }
 

@@ -2,12 +2,14 @@ package middlewares
 
 import (
 	"fmt"
+	"net/http"
 	"strings"
 
 	"github.com/spf13/viper"
 
 	"github.com/gin-gonic/gin"
 	"github.com/ninjadotorg/handshake-dispatcher/config"
+	"github.com/ninjadotorg/handshake-dispatcher/controllers"
 	"github.com/ninjadotorg/handshake-dispatcher/models"
 	"github.com/ninjadotorg/handshake-dispatcher/utils"
 )
@@ -51,6 +53,20 @@ func AuthMiddleware() gin.HandlerFunc {
 			c.Set("User", user)
 		} else {
 			c.Set("WhiteUser", 1)
+		}
+
+		c.Next()
+	}
+}
+
+func AdminAuthMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		conf := config.GetConfig()
+		adminHash := conf.GetString("admin_hash")
+		bearer := strings.TrimSpace(c.Request.Header.Get("Bearer"))
+		if len(bearer) < 1 || bearer != adminHash {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, controllers.JsonResponse{0, "Unauthorized", nil})
+			return
 		}
 
 		c.Next()
