@@ -30,6 +30,8 @@ func (u UserController) UploadIDVerfication(c *gin.Context) {
 	user, _ := c.Get("User")
 	userModel = user.(models.User)
 	// document type: 0:passport, 1:driver license, 2:id card
+	userFullName := c.DefaultPostForm("full_name", "")
+	idNumber := c.DefaultPostForm("id_number", "")
 	documentType, convertErr := strconv.Atoi(c.DefaultPostForm("document_type", "-1"))
 	frontImage, frontImageErr := c.FormFile("front_image")
 	backImage, backImageErr := c.FormFile("back_image")
@@ -49,6 +51,18 @@ func (u UserController) UploadIDVerfication(c *gin.Context) {
 	}
 
 	fileNameTemplate := fmt.Sprintf("%s/id_verification_%s_u%d-%s_%s_%s_%d.%s", uploadImageFolder, documentTypesInStr[documentType], userModel.ID, userModel.Username, "%s", time.Now().Format("20060102150405"), rand.Int(), "%s")
+
+	if len(userFullName) < 1 {
+		resp := JsonResponse{0, "Please enter your full name", nil}
+		c.JSON(http.StatusOK, resp)
+		return
+	}
+
+	if len(idNumber) < 1 {
+		resp := JsonResponse{0, "Please enter your document number", nil}
+		c.JSON(http.StatusOK, resp)
+		return
+	}
 
 	if frontImageErr != nil || !utils.ValidateImage(frontImage.Filename, frontImage.Header.Get("Content-Type")) {
 		resp := JsonResponse{0, "Unsupported front image file", nil}
@@ -95,7 +109,7 @@ func (u UserController) UploadIDVerfication(c *gin.Context) {
 	var existsIDVerification models.IDVerification
 	errDb := db.Where("user_id = ?", userModel.ID).First(&existsIDVerification).Error
 	if errDb != nil {
-		idVerificationModel := models.IDVerification{UserID: userModel.ID, IDType: documentType, FrontImage: frontImageFilename, BackImage: backImageFilename, SelfieImage: selfieImageFilename}
+		idVerificationModel := models.IDVerification{UserID: userModel.ID, IDType: documentType, Name: userFullName, IDNumber: idNumber, FrontImage: frontImageFilename, BackImage: backImageFilename, SelfieImage: selfieImageFilename}
 		errDb := db.Create(&idVerificationModel).Error
 
 		if errDb != nil {
@@ -105,6 +119,8 @@ func (u UserController) UploadIDVerfication(c *gin.Context) {
 		}
 	} else if existsIDVerification.Status == 0 {
 		existsIDVerification.IDType = documentType
+		existsIDVerification.Name = userFullName
+		existsIDVerification.IDNumber = idNumber
 		existsIDVerification.FrontImage = frontImageFilename
 		existsIDVerification.BackImage = backImageFilename
 		existsIDVerification.SelfieImage = selfieImageFilename
@@ -115,6 +131,15 @@ func (u UserController) UploadIDVerfication(c *gin.Context) {
 			c.JSON(http.StatusOK, resp)
 			return
 		}
+	}
+
+	userModel.IDVerified = 2
+	errDb = db.Save(&userModel).Error
+
+	if errDb != nil {
+		resp := JsonResponse{0, "Unable to upload your documents", nil}
+		c.JSON(http.StatusOK, resp)
+		return
 	}
 
 	resp := JsonResponse{1, "", nil}
