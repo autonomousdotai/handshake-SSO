@@ -117,13 +117,14 @@ func (u UserController) UploadIDVerfication(c *gin.Context) {
 			c.JSON(http.StatusOK, resp)
 			return
 		}
-	} else if existsIDVerification.Status == 0 {
+	} else if existsIDVerification.Status == -1 {
 		existsIDVerification.IDType = documentType
 		existsIDVerification.Name = userFullName
 		existsIDVerification.IDNumber = idNumber
 		existsIDVerification.FrontImage = frontImageFilename
 		existsIDVerification.BackImage = backImageFilename
 		existsIDVerification.SelfieImage = selfieImageFilename
+		existsIDVerification.Status = 0
 		errDb := db.Save(&existsIDVerification).Error
 
 		if errDb != nil {

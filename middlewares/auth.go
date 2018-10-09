@@ -63,7 +63,7 @@ func AdminAuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		conf := config.GetConfig()
 		adminHash := conf.GetString("admin_hash")
-		bearer := strings.TrimSpace(c.Request.Header.Get("Bearer"))
+		bearer := strings.TrimSpace(c.Request.Header.Get("AdminHash"))
 		if len(bearer) < 1 || bearer != adminHash {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, controllers.JsonResponse{0, "Unauthorized", nil})
 			return

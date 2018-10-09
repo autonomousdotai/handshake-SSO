@@ -37,7 +37,7 @@ func (i IDVerification) UpdateStatus(c *gin.Context) {
 
 	status, convErr := strconv.Atoi(c.DefaultPostForm("status", "0"))
 
-	if convErr != nil || status < 0 || status > 1 {
+	if convErr != nil || status < -1 || status > 1 {
 		resp := JsonResponse{0, "Invalid status", nil}
 		c.JSON(http.StatusOK, resp)
 		return
