@@ -48,6 +48,7 @@ func NewRouter() *gin.Engine {
 
 	userController := new(controllers.UserController)
 	verificationController := new(controllers.VerifierController)
+
 	userGroup := router.Group("user")
 	{
 		userGroup.GET("/profile", middlewares.AuthMiddleware(), userController.Profile)
@@ -74,6 +75,15 @@ func NewRouter() *gin.Engine {
 		userGroup.POST("/verification/redeem-code/check", middlewares.AuthMiddleware(), verificationController.CheckRedeemCodeVerification)
 		userGroup.POST("/verification/redeem-code/redeem", middlewares.AuthMiddleware(), verificationController.ActiveRedeemCode)
 
+	}
+
+	storeController := new(controllers.StoreController)
+	storeGroup := router.Group("store")
+	{
+		storeGroup.POST("/create", middlewares.AuthMiddleware(), storeController.Create)
+		storeGroup.GET("/list", middlewares.AuthMiddleware(), storeController.List)
+		storeGroup.GET("/detail", middlewares.AuthMiddleware(), storeController.Detail)
+		storeGroup.POST("/update", middlewares.AuthMiddleware(), storeController.UpdateStore)
 	}
 
 	handshakeController := new(controllers.HandshakeController)

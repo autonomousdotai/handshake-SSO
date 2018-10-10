@@ -17,4 +17,5 @@ func main() {
 	db.AutoMigrate(&models.SubscribedUser{})
 	db.AutoMigrate(&models.Nonce{})
 	db.AutoMigrate(&models.IDVerification{})
+	db.AutoMigrate(&models.Store{})
 }
