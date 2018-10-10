@@ -93,3 +93,10 @@ func ValidateProduct(product string) (valid bool) {
 	}
 	return false
 }
+
+// ValidateImage : filename, contentType
+func ValidateImage(filename string, contentType string) (valid bool) {
+	fileParts := strings.Split(filename, ".")
+	fileExt := strings.ToLower(fileParts[len(fileParts)-1])
+	return (contentType == "image/png" || contentType == "image/jpeg" || contentType == "image/jpg") && (fileExt == "png" || fileExt == "jpg" || fileExt == "jpeg")
+}

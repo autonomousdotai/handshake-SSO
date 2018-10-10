@@ -54,6 +54,7 @@ func NewRouter() *gin.Engine {
 		userGroup.GET("/username-exist", middlewares.AuthMiddleware(), userController.UsernameExist)
 		userGroup.GET("/username/:id", userController.Username)
 		userGroup.POST("/profile", middlewares.AuthMiddleware(), userController.UpdateProfile)
+		userGroup.POST("/id_verification", middlewares.AuthMiddleware(), userController.UploadIDVerfication)
 
 		userGroup.POST("/sign-up", userController.SignUp)
 		userGroup.POST("/free-rinkeby-eth", middlewares.AuthMiddleware(), userController.FreeRinkebyEther)
@@ -70,6 +71,9 @@ func NewRouter() *gin.Engine {
 		userGroup.POST("/verification/phone/check", middlewares.AuthMiddleware(), verificationController.CheckPhoneVerification)
 		userGroup.POST("/verification/email/start", middlewares.AuthMiddleware(), verificationController.SendEmailVerification)
 		userGroup.POST("/verification/email/check", middlewares.AuthMiddleware(), verificationController.CheckEmailVerification)
+		userGroup.POST("/verification/redeem-code/check", middlewares.AuthMiddleware(), verificationController.CheckRedeemCodeVerification)
+		userGroup.POST("/verification/redeem-code/redeem", middlewares.AuthMiddleware(), verificationController.ActiveRedeemCode)
+
 	}
 
 	handshakeController := new(controllers.HandshakeController)
@@ -87,6 +91,13 @@ func NewRouter() *gin.Engine {
 	{
 		systemGroup.GET("/user/:id", systemController.User)
 		systemGroup.POST("/betsuccess/:id", systemController.BetSuccess)
+	}
+
+	idVerificationController := new(controllers.IDVerification)
+	idVerificationGroup := router.Group("id_verification")
+	{
+		idVerificationGroup.GET("/list", middlewares.AdminAuthMiddleware(), idVerificationController.List)
+		idVerificationGroup.POST("/update", middlewares.AdminAuthMiddleware(), idVerificationController.UpdateStatus)
 	}
 
 	conf := config.GetConfig()

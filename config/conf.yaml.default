@@ -1,4 +1,5 @@
 secret_key: abcd1234abcd1234abcd1234abcd1234
+admin_hash: 123456789
 db: root:123456@tcp(localhost:3306)/handshake?charset=utf8&parseTime=True&loc=Local
 twilio_key: xxx
 email_verification_url: http://handshake.ninja/email-verification
