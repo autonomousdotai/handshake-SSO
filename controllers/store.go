@@ -111,7 +111,7 @@ func (i StoreController) List(c *gin.Context) {
 	db := models.Database()
 	var listStore []models.Store
 
-	errDb := db.Where("user_id = ?", userModel.ID).Find(&listStore).Error
+	errDb := db.Where("user_id = ? and status=1", userModel.ID).Find(&listStore).Error
 
 	if errDb != nil {
 		resp := JsonResponse{0, "Unable to load list", nil}
