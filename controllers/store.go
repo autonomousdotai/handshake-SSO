@@ -52,6 +52,15 @@ func (u StoreController) Create(c *gin.Context) {
 		return
 	}
 
+	receive_email := c.DefaultPostForm("receive_email", "_")
+	if receive_email == "_" {
+		resp := JsonResponse{0, "Invalid receive_email", nil}
+		c.JSON(http.StatusOK, resp)
+		return
+	}
+
+
+
 	// check name:
 	var _store models.Store
 	errDb := models.Database().Where("store_id = ?", store_id).First(&_store).Error
@@ -76,6 +85,7 @@ func (u StoreController) Create(c *gin.Context) {
 				WalletsReceive: wallets_receive,
 				ConfirmURL: confirm_url,
 				UserID: userModel.ID,
+				ReceiveEmail: receive_email,
 	}
 
 	errDb = db.Save(&store).Error
@@ -152,6 +162,7 @@ func (i StoreController) UpdateStore(c *gin.Context) {
 	store_id := c.DefaultPostForm("store_id", "_")
 	store_name := c.DefaultPostForm("store_name", "_")
 	status, _ := strconv.Atoi(c.DefaultPostForm("status", "-1"))
+	receive_email := c.DefaultPostForm("receive_email", "_")
 
 
 	db := models.Database()
@@ -199,6 +210,9 @@ func (i StoreController) UpdateStore(c *gin.Context) {
 		resp := JsonResponse{0, "Could not found user related to this store", nil}
 		c.JSON(http.StatusOK, resp)
 		return
+	}
+	if receive_email != "_" {
+		store.ReceiveEmail = receive_email
 	}
 
 
