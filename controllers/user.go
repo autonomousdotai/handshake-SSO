@@ -194,7 +194,24 @@ func (u UserController) Profile(c *gin.Context) {
 	userModel = user.(models.User)
 	userModel.UUID = ""
 
-	resp := JsonResponse{1, "", userModel}
+	tmpJson, err := json.Marshal(userModel)
+	if err != nil {
+		resp := JsonResponse{0, "User Profile toJson error", nil}
+		c.JSON(http.StatusOK, resp)
+		c.Abort()
+		return
+	}
+	var tmp interface{}
+	json.Unmarshal(tmpJson, &tmp)
+	responseUser := tmp.(map[string]interface{})
+
+	if userModel.Metadata != "" {
+		responseUser["verified"] = 0
+	} else {
+		responseUser["verified"] = 1
+	}
+
+	resp := JsonResponse{1, "", responseUser}
 	c.JSON(http.StatusOK, resp)
 }
 
