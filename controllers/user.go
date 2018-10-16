@@ -355,7 +355,7 @@ func (u UserController) UpdateProfile(c *gin.Context) {
 		responseUser["verified"] = 1
 	}
 
-	resp := JsonResponse{1, "", userModel}
+	resp := JsonResponse{1, "", responseUser}
 	c.JSON(http.StatusOK, resp)
 }
 
