@@ -205,7 +205,7 @@ func (u UserController) Profile(c *gin.Context) {
 	json.Unmarshal(tmpJson, &tmp)
 	responseUser := tmp.(map[string]interface{})
 
-	if userModel.Metadata != "" && userModel.Email != "" {
+	if userModel.Metadata != "" && userModel.Metadata != "{}" && userModel.Email != "" {
 		responseUser["verified"] = 0
 	} else {
 		responseUser["verified"] = 1
@@ -349,7 +349,7 @@ func (u UserController) UpdateProfile(c *gin.Context) {
 	json.Unmarshal(tmpJson, &tmp)
 	responseUser := tmp.(map[string]interface{})
 
-	if userModel.Metadata != "" && userModel.Email != "" {
+	if userModel.Metadata != "" && userModel.Metadata != "{}" && userModel.Email != "" {
 		responseUser["verified"] = 0
 	} else {
 		responseUser["verified"] = 1
