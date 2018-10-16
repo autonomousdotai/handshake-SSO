@@ -82,7 +82,7 @@ func (u StoreController) Create(c *gin.Context) {
 				Status: status,
 				StoreName: store_name,
 				StoreID: store_id,
-				WalletReceive: wallets_receive,
+				WalletsReceive: wallets_receive,
 				ConfirmURL: confirm_url,
 				UserID: userModel.ID,
 				ReceiveEmail: receive_email,
@@ -179,7 +179,7 @@ func (i StoreController) UpdateStore(c *gin.Context) {
 		store.Status = status
 	}
 	if wallets_receive != "_" {
-		store.WalletReceive = wallets_receive
+		store.WalletsReceive = wallets_receive
 	}
 	if confirm_url != "_" {
 		store.ConfirmURL = confirm_url
