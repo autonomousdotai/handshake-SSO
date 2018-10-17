@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -345,7 +346,7 @@ func (u VerifierController) Scan(c *gin.Context) {
 	}
 
 	for _, user := range users {
-		if user.Email != "" && (user.Metadata == "" || user.Metadata == "{}") {
+		if user.Email != "" && strings.Contains(user.Metadata, "verification-code") {
 			log.Println("Update user: ", user.ID)
 			user.Verified = 1
 			dbErr := models.Database().Save(&user).Error
