@@ -74,6 +74,7 @@ func NewRouter() *gin.Engine {
 		userGroup.POST("/verification/email/check", middlewares.AuthMiddleware(), verificationController.CheckEmailVerification)
 		userGroup.POST("/verification/redeem-code/check", middlewares.AuthMiddleware(), verificationController.CheckRedeemCodeVerification)
 		userGroup.POST("/verification/redeem-code/redeem", middlewares.AuthMiddleware(), verificationController.ActiveRedeemCode)
+		userGroup.POST("/verification/scan", middlewares.AuthMiddleware(), verificationController.Scan)
 
 	}
 

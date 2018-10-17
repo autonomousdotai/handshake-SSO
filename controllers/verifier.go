@@ -1,18 +1,19 @@
 package controllers
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"time"
-	"io/ioutil"
-	"bytes"
+
 	"github.com/gin-gonic/gin"
+	"github.com/ninjadotorg/handshake-dispatcher/config"
 	"github.com/ninjadotorg/handshake-dispatcher/models"
 	"github.com/ninjadotorg/handshake-dispatcher/services"
 	"github.com/ninjadotorg/handshake-dispatcher/utils"
-	"github.com/ninjadotorg/handshake-dispatcher/config"
 )
 
 type VerifierController struct{}
@@ -85,13 +86,15 @@ func (s VerifierController) SendEmailVerification(c *gin.Context) {
 	}
 
 	md["verification-code"] = map[string]interface{}{
-		"time": time.Now(),
-		"code": code,
+		"email": email,
+		"time":  time.Now(),
+		"code":  code,
 	}
 
 	metadata, _ := json.Marshal(md)
 	userModel.Metadata = string(metadata)
 	userModel.Email = email
+	userModel.Verified = 0
 	dbErr := models.Database().Save(&userModel).Error
 	if dbErr != nil {
 		log.Println("Send verification failed", dbErr.Error())
@@ -146,10 +149,20 @@ func (s VerifierController) CheckEmailVerification(c *gin.Context) {
 		return
 	}
 
+	realEmail := (verificationCode.(map[string]interface{}))["email"]
+	if fmt.Sprint(realEmail) != fmt.Sprint(email) {
+		resp := JsonResponse{0, "Email verified failed", nil}
+		c.JSON(http.StatusOK, resp)
+		c.Abort()
+		return
+	}
+
 	delete(md, "verification-code")
 	metadata, _ := json.Marshal(md)
 	userModel.Metadata = string(metadata)
 	userModel.Email = email
+	userModel.Verified = 1
+
 	dbErr := models.Database().Save(&userModel).Error
 	if dbErr != nil {
 		resp := JsonResponse{0, "Email verified failed", nil}
@@ -199,7 +212,6 @@ func (s VerifierController) ActiveRedeemCode(c *gin.Context) {
 	endpoint := apiVerifyRedeemCode + "promotion-program-api/verify-promotion-code?promotion_code=%s"
 	uri := fmt.Sprintf(endpoint, code)
 
-
 	request, _ := http.NewRequest("POST", uri, nil)
 
 	client := &http.Client{}
@@ -214,17 +226,14 @@ func (s VerifierController) ActiveRedeemCode(c *gin.Context) {
 	var data map[string]interface{}
 	json.Unmarshal(b, &data)
 
-
 	if data["status"].(float64) != 1 {
 		c.JSON(http.StatusOK, data)
 		return
 	}
 
-
-	fmt.Println ("active + transfer ========================")
+	fmt.Println("active + transfer ========================")
 
 	toAddress := c.DefaultQuery("to-address", "")
-
 
 	fiatAmountValue := ((data["data"].(map[string]interface{}))["amount"]).(float64)
 	currency := c.DefaultQuery("currency", "")
@@ -242,9 +251,7 @@ func (s VerifierController) ActiveRedeemCode(c *gin.Context) {
 		return
 	}
 
-
-
-	fmt.Println ("transfer----------------------------------")
+	fmt.Println("transfer----------------------------------")
 	exchangeAPI, found := utils.GetForwardingEndpoint("exchange")
 	log.Println(exchangeAPI, found)
 
@@ -278,7 +285,6 @@ func (s VerifierController) ActiveRedeemCode(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, dataExchange)
-
 
 	//fmt.Println ("active------------------------------------")
 	//endpoint = apiVerifyRedeemCode + "promotion-program-api/redeem-code?promotion_code=%s"
@@ -325,3 +331,31 @@ const EMAIL_VERIFICATION_TEMPLATE = `<html>
 </body>
 </html>
 `
+
+func (u VerifierController) Scan(c *gin.Context) {
+
+	db := models.Database()
+	users := []models.User{}
+	errDb := db.Find(&users).Error
+
+	if errDb != nil {
+		resp := JsonResponse{0, "Get all user fail", errDb}
+		c.JSON(http.StatusOK, resp)
+		return
+	}
+
+	for _, user := range users {
+		if user.Email != "" && (user.Metadata == "" || user.Metadata == "{}") {
+			log.Println("Update user: ", user.ID)
+			user.Verified = 1
+			dbErr := models.Database().Save(&user).Error
+			if dbErr != nil {
+				log.Println("Update user failed", dbErr.Error())
+				resp := JsonResponse{0, "Update user failed", nil}
+				c.JSON(http.StatusOK, resp)
+			}
+		}
+	}
+	resp := JsonResponse{1, "Done", nil}
+	c.JSON(http.StatusOK, resp)
+}
