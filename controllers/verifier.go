@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -332,31 +331,3 @@ const EMAIL_VERIFICATION_TEMPLATE = `<html>
 </body>
 </html>
 `
-
-func (u VerifierController) Scan(c *gin.Context) {
-
-	db := models.Database()
-	users := []models.User{}
-	errDb := db.Find(&users).Error
-
-	if errDb != nil {
-		resp := JsonResponse{0, "Get all user fail", errDb}
-		c.JSON(http.StatusOK, resp)
-		return
-	}
-
-	for _, user := range users {
-		if user.Email != "" && !strings.Contains(user.Metadata, "verification-code") {
-			log.Println("Update user: ", user.ID)
-			user.Verified = 1
-			dbErr := models.Database().Save(&user).Error
-			if dbErr != nil {
-				log.Println("Update user failed", dbErr.Error())
-				resp := JsonResponse{0, "Update user failed", nil}
-				c.JSON(http.StatusOK, resp)
-			}
-		}
-	}
-	resp := JsonResponse{1, "Done", nil}
-	c.JSON(http.StatusOK, resp)
-}
