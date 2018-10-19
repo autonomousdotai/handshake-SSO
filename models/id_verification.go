@@ -13,6 +13,7 @@ type IDVerification struct {
 	FrontImage  string `gorm:"column:front_image" json:"front_image"`
 	BackImage   string `gorm:"column:back_image" json:"back_image"`
 	SelfieImage string `gorm:"column:selfie_image" json:"selfie_image"`
+	Level       int    `gorm:"column:level;default:0" json:"level"`
 	Status      int    `gorm:"column:status;default:0" json:"status"`
 }
 

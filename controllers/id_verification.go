@@ -53,8 +53,6 @@ func (i IDVerification) UpdateStatus(c *gin.Context) {
 		return
 	}
 
-	idVerificationItem.Status = status
-
 	var user models.User
 	errDb = db.Where("id = ?", idVerificationItem.UserID).First(&user).Error
 
@@ -64,7 +62,12 @@ func (i IDVerification) UpdateStatus(c *gin.Context) {
 		return
 	}
 
+	idVerificationItem.Status = status
 	user.IDVerified = status
+	if status == 1 {
+		user.IDVerificationLevel++
+		idVerificationItem.Level++
+	}
 
 	if db.Save(&idVerificationItem).Error != nil || db.Save(&user).Error != nil {
 		resp := JsonResponse{0, "Could not update status for this id verification. Please try again", nil}

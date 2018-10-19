@@ -21,6 +21,7 @@ type User struct {
 	Metadata              string `gorm:"column:metadata;size:5000" json:"-"`
 	FCMToken              string `gorm:"column:fcm_token;size:200" json:"fcm_token"`
 	IDVerified            int    `gorm:"column:id_verified;default:0" json:"id_verified"`
+	IDVerificationLevel   int    `gorm:"column:id_verification_level;default:0" json:"id_verification_level"`
 	RefID                 uint   `gorm:"column:ref_id;" json:"-"`
 }
 
