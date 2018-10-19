@@ -26,6 +26,25 @@ func (i IDVerification) List(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
+func (i IDVerification) Get(c *gin.Context) {
+	var userModel models.User
+	user, _ := c.Get("User")
+	userModel = user.(models.User)
+
+	db := models.Database()
+	var existsIDVerification models.IDVerification
+	existsIDVerificationErr := db.Where("user_id = ?", userModel.ID).First(&existsIDVerification).Error
+
+	if existsIDVerificationErr != nil {
+		resp := JsonResponse{0, "Not found", nil}
+		c.JSON(http.StatusOK, resp)
+		return
+	}
+
+	resp := JsonResponse{1, "Success", &existsIDVerification}
+	c.JSON(http.StatusOK, resp)
+}
+
 func (i IDVerification) UpdateStatus(c *gin.Context) {
 	id, convErr := strconv.Atoi(c.DefaultPostForm("id", "-1"))
 

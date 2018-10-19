@@ -108,6 +108,7 @@ func NewRouter() *gin.Engine {
 	{
 		idVerificationGroup.GET("/list", middlewares.AdminAuthMiddleware(), idVerificationController.List)
 		idVerificationGroup.POST("/update", middlewares.AdminAuthMiddleware(), idVerificationController.UpdateStatus)
+		idVerificationGroup.GET("/get", middlewares.AuthMiddleware(), idVerificationController.Get)
 	}
 
 	conf := config.GetConfig()
