@@ -1,7 +1,6 @@
 package middlewares
 
 import (
-	"fmt"
 	"net/http"
 	"strings"
 
@@ -16,7 +15,6 @@ import (
 
 func isWhiteEndpoint(conf *viper.Viper, url string) bool {
 	for _, v := range conf.GetStringSlice("white_endpoints") {
-		fmt.Println("DTHTRONG ", v, url)
 		if v == url {
 			return true
 		}

@@ -228,7 +228,6 @@ func (u UserController) Profile(c *gin.Context) {
 	user, _ := c.Get("User")
 	userModel = user.(models.User)
 	userModel.UUID = ""
-
 	resp := JsonResponse{1, "", userModel}
 	c.JSON(http.StatusOK, resp)
 }
@@ -355,7 +354,6 @@ func (u UserController) UpdateProfile(c *gin.Context) {
 	}
 
 	userModel.UUID = ""
-	log.Println(userModel)
 	resp := JsonResponse{1, "", userModel}
 	c.JSON(http.StatusOK, resp)
 }
