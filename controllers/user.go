@@ -41,6 +41,7 @@ func (u UserController) UploadIDVerfication(c *gin.Context) {
 		idNumber := c.DefaultPostForm("id_number", "")
 		// document type: 0:passport, 1:driver license, 2:id card
 		documentType, convertErr := strconv.Atoi(c.DefaultPostForm("document_type", "-1"))
+		email := c.DefaultPostForm("email", "")
 		frontImage, frontImageErr := c.FormFile("front_image")
 		backImage, backImageErr := c.FormFile("back_image")
 
@@ -84,6 +85,12 @@ func (u UserController) UploadIDVerfication(c *gin.Context) {
 			return
 		}
 
+		if email == "" {
+			resp := JsonResponse{0, "Please enter your email", nil}
+			c.JSON(http.StatusOK, resp)
+			return
+		}
+
 		if documentType != 0 {
 			backImageExt = strings.Split(backImage.Filename, ".")[1]
 			backImageFilename = fmt.Sprintf(fileNameTemplate, "back", backImageExt)
@@ -101,7 +108,7 @@ func (u UserController) UploadIDVerfication(c *gin.Context) {
 		}
 
 		if existsIDVerificationErr != nil {
-			idVerificationModel := models.IDVerification{UserID: userModel.ID, IDType: documentType, Name: userFullName, IDNumber: idNumber, FrontImage: frontImageFilename, BackImage: backImageFilename, SelfieImage: ""}
+			idVerificationModel := models.IDVerification{UserID: userModel.ID, IDType: documentType, Name: userFullName, IDNumber: idNumber, FrontImage: frontImageFilename, BackImage: backImageFilename, SelfieImage: "", Email: email}
 			errDb := db.Create(&idVerificationModel).Error
 
 			if errDb != nil {
@@ -115,6 +122,7 @@ func (u UserController) UploadIDVerfication(c *gin.Context) {
 			existsIDVerification.IDNumber = idNumber
 			existsIDVerification.FrontImage = frontImageFilename
 			existsIDVerification.BackImage = backImageFilename
+			existsIDVerification.Email = email
 			existsIDVerification.SelfieImage = ""
 			existsIDVerification.Status = 0
 			errDb := db.Save(&existsIDVerification).Error
