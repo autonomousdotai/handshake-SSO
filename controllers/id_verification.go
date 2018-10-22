@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -117,11 +118,12 @@ func (i IDVerification) UpdateStatus(c *gin.Context) {
 	}
 
 	userEmail := idVerificationItem.Email
+	userFullName := idVerificationItem.Name
 	if status == 1 && userEmail != "" && user.IDVerificationLevel > 0 {
 		emailContentToSend := emailContent[user.IDVerificationLevel-1]
 		mailClient := services.MailService{}
 		subject := emailContentToSend.Subject
-		content := emailContentToSend.Content
+		content := fmt.Sprintf(emailContentToSend.Content, userFullName)
 		go mailClient.Send("dojo@ninja.org", userEmail, subject, content)
 	}
 
