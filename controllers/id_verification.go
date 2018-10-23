@@ -36,8 +36,15 @@ var emailContent = [2]IDVerificationEmail{{
 func (i IDVerification) List(c *gin.Context) {
 	db := models.Database()
 	var listIDVerification []models.IDVerification
+	filterUserID, convertErr := strconv.Atoi(c.Query("uid"))
 
-	errDb := db.Where("status = 0").Find(&listIDVerification).Error
+	query := db.Where("status = 0")
+
+	if convertErr == nil {
+		query = query.Where("user_id = ?", filterUserID)
+	}
+
+	errDb := query.Find(&listIDVerification).Error
 
 	if errDb != nil {
 		resp := JsonResponse{0, "Unable to load list", nil}

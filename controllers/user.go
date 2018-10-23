@@ -191,7 +191,8 @@ func (u UserController) UploadIDVerfication(c *gin.Context) {
 	}
 
 	subject := fmt.Sprintf("[VERIFY] Please approve this account UserId: %d - Upgrading Level: %d", userModel.ID, currentVerificationLevel+1)
-	mailClient.Send("dojo@ninja.org", mailTo, subject, subject)
+	content := fmt.Sprintf("Verify Link: %s/admin/id-verification?uid=%d", conf.GetString("working_domain"), userModel.ID)
+	mailClient.Send("dojo@ninja.org", mailTo, subject, content)
 
 	resp := JsonResponse{1, "", nil}
 	c.JSON(http.StatusOK, resp)
