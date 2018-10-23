@@ -16,6 +16,7 @@ import (
 	"github.com/ninjadotorg/handshake-dispatcher/config"
 	"github.com/ninjadotorg/handshake-dispatcher/daos"
 	"github.com/ninjadotorg/handshake-dispatcher/models"
+	"github.com/ninjadotorg/handshake-dispatcher/services"
 	"github.com/ninjadotorg/handshake-dispatcher/utils"
 )
 
@@ -35,6 +36,9 @@ func (u UserController) UploadIDVerfication(c *gin.Context) {
 	db := models.Database()
 	var existsIDVerification models.IDVerification
 	existsIDVerificationErr := db.Where("user_id = ?", userModel.ID).First(&existsIDVerification).Error
+	mailClient := services.MailService{}
+	conf := config.GetConfig()
+	mailTo := conf.GetString("id_verification_admin_email")
 
 	if currentVerificationLevel == 0 {
 		userFullName := c.DefaultPostForm("full_name", "")
@@ -185,6 +189,9 @@ func (u UserController) UploadIDVerfication(c *gin.Context) {
 		c.JSON(http.StatusOK, resp)
 		return
 	}
+
+	subject := fmt.Sprintf("[VERIFY] Please approve this account UserId: %d - Upgrading Level: %d", userModel.ID, currentVerificationLevel+1)
+	mailClient.Send("dojo@ninja.org", mailTo, subject, subject)
 
 	resp := JsonResponse{1, "", nil}
 	c.JSON(http.StatusOK, resp)
