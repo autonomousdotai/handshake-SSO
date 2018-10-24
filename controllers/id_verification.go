@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/ninjadotorg/handshake-dispatcher/config"
 	"github.com/ninjadotorg/handshake-dispatcher/models"
 	"github.com/ninjadotorg/handshake-dispatcher/services"
 )
@@ -20,9 +21,9 @@ type IDVerificationEmail struct {
 var emailContent = [2]IDVerificationEmail{{
 	Subject: "Ninja Coin - Successful ID Verification",
 	Content: `<p>Dear %s</p>
-	<p>Thank you for signing up with Ninja Coin!</p>
+	<p>Thank you for signing up with <a href="%s/coin">Ninja Coin</a>!</p>
 	<p>Your ID has been verified. Your current daily limit is 500 USD with various payment method such as cash, credit card and bank transfer.</p>
-	<p>If you wish to upgrade to your next tier, which is up to 5000 USD daily, please submit your selfie here.</p>
+	<p>If you wish to upgrade to your next tier, which is up to 5000 USD daily, please <a href="%s/me/profile">submit your selfie here</a>.</p>
 	<p>This is not you who verify the account? Inform us immediately!</p>
 	<p>Have fun at the dojo!<br />Ninja Team</p>`,
 }, {
@@ -36,11 +37,15 @@ var emailContent = [2]IDVerificationEmail{{
 func (i IDVerification) List(c *gin.Context) {
 	db := models.Database()
 	var listIDVerification []models.IDVerification
-	filterUserID, convertErr := strconv.Atoi(c.Query("uid"))
+	status := 0
 
-	query := db.Where("status = 0")
+	if filterStatus, err := strconv.Atoi(c.Query("status")); err == nil {
+		status = filterStatus
+	}
 
-	if convertErr == nil {
+	query := db.Where("status = ?", status)
+
+	if filterUserID, err := strconv.Atoi(c.Query("uid")); err == nil {
 		query = query.Where("user_id = ?", filterUserID)
 	}
 
@@ -77,6 +82,7 @@ func (i IDVerification) Get(c *gin.Context) {
 
 func (i IDVerification) UpdateStatus(c *gin.Context) {
 	id, convErr := strconv.Atoi(c.DefaultPostForm("id", "-1"))
+	conf := config.GetConfig()
 
 	if convErr != nil || id < 0 {
 		resp := JsonResponse{0, "Invalid id", nil}
@@ -130,7 +136,13 @@ func (i IDVerification) UpdateStatus(c *gin.Context) {
 		emailContentToSend := emailContent[user.IDVerificationLevel-1]
 		mailClient := services.MailService{}
 		subject := emailContentToSend.Subject
-		content := fmt.Sprintf(emailContentToSend.Content, userFullName)
+		var content string
+		if user.IDVerificationLevel == 1 {
+			workingDomain := conf.GetString("working_domain")
+			content = fmt.Sprintf(emailContentToSend.Content, userFullName, workingDomain, workingDomain)
+		} else {
+			content = fmt.Sprintf(emailContentToSend.Content, userFullName)
+		}
 		go mailClient.Send("dojo@ninja.org", userEmail, subject, content)
 	}
 
