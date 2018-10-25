@@ -89,12 +89,6 @@ func (u UserController) UploadIDVerfication(c *gin.Context) {
 			return
 		}
 
-		if email == "" {
-			resp := JsonResponse{0, "Please enter your email", nil}
-			c.JSON(http.StatusOK, resp)
-			return
-		}
-
 		if documentType != 0 {
 			backImageExt = strings.Split(backImage.Filename, ".")[1]
 			backImageFilename = fmt.Sprintf(fileNameTemplate, "back", backImageExt)
