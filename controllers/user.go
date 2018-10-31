@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/bluele/slack"
 	"github.com/gin-gonic/gin"
 
 	"github.com/ninjadotorg/handshake-dispatcher/config"
@@ -187,6 +188,9 @@ func (u UserController) UploadIDVerfication(c *gin.Context) {
 	subject := fmt.Sprintf("[VERIFY] Please approve this account UserId: %d - Upgrading Level: %d", userModel.ID, currentVerificationLevel+1)
 	content := fmt.Sprintf("Verify Link: %s/admin/id-verification?uid=%d", conf.GetString("working_domain"), userModel.ID)
 	mailClient.Send("dojo@ninja.org", mailTo, subject, content)
+
+	slackClient := slack.New(conf.GetString("slack_token"))
+	slackClient.ChatPostMessage("exchange-notification", subject, nil)
 
 	resp := JsonResponse{1, "", nil}
 	c.JSON(http.StatusOK, resp)

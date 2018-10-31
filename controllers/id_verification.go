@@ -18,7 +18,7 @@ type IDVerificationEmail struct {
 	Content string
 }
 
-var emailContent = [2]IDVerificationEmail{{
+var emailContent = [3]IDVerificationEmail{{
 	Subject: "Ninja Coin - Successful ID Verification",
 	Content: `<p>Dear %s</p>
 	<p>Thank you for signing up with <a href="%s/coin">Ninja Coin</a>!</p>
@@ -32,6 +32,12 @@ var emailContent = [2]IDVerificationEmail{{
 	<p>Your account verification is completed. Now you can buy up to 5,000 USD everyday with various payment method such as cash, credit card and bank transfer.</p>
 	<p>If you are receiving this email and have never signed up with us, please inform us immediately.</p>
 	<p>Have fun at the dojo!<br />Ninja Team</p>`,
+}, {
+	Subject: "Your account verification has been rejected",
+	Content: `<p>Dear %s,</p>
+	<p>We are sorry inform you that your account verification has been rejected. The reason for this is %s. Please <a href="%s/me/profile">click here</a> to try again.</p>
+	<p>If you think this is a mistake, please contact our hotline +84975504082 for further assistance</p>
+	<p>Have fun at the dojo<br />Ninja Team</p>`,
 }}
 
 func (i IDVerification) List(c *gin.Context) {
@@ -132,18 +138,27 @@ func (i IDVerification) UpdateStatus(c *gin.Context) {
 
 	userEmail := idVerificationItem.Email
 	userFullName := idVerificationItem.Name
-	if status == 1 && userEmail != "" && user.IDVerificationLevel > 0 {
-		emailContentToSend := emailContent[user.IDVerificationLevel-1]
+	if userEmail != "" && user.IDVerificationLevel > 0 {
 		mailClient := services.MailService{}
-		subject := emailContentToSend.Subject
+		var subject string
 		var content string
-		if user.IDVerificationLevel == 1 {
-			workingDomain := conf.GetString("working_domain")
-			content = fmt.Sprintf(emailContentToSend.Content, userFullName, workingDomain, workingDomain)
-		} else {
-			content = fmt.Sprintf(emailContentToSend.Content, userFullName)
+		workingDomain := conf.GetString("working_domain")
+		if status == 1 {
+			emailContentToSend := emailContent[user.IDVerificationLevel-1]
+			subject = emailContentToSend.Subject
+			if user.IDVerificationLevel == 1 {
+				content = fmt.Sprintf(emailContentToSend.Content, userFullName, workingDomain, workingDomain)
+			} else {
+				content = fmt.Sprintf(emailContentToSend.Content, userFullName)
+			}
+		} else if status == -1 {
+			emailContentToSend := emailContent[2]
+			subject = emailContentToSend.Subject
+			content = fmt.Sprintf(emailContentToSend.Content, userFullName, "Invalid Documents", workingDomain)
 		}
-		go mailClient.Send("dojo@ninja.org", userEmail, subject, content)
+		if subject != "" {
+			go mailClient.Send("dojo@ninja.org", userEmail, subject, content)
+		}
 	}
 
 	resp := JsonResponse{1, "Success", nil}
