@@ -24,6 +24,9 @@ type User struct {
 	IDVerified            int    `gorm:"column:id_verified;default:0" json:"id_verified"`
 	IDVerificationLevel   int    `gorm:"column:id_verification_level;default:0" json:"id_verification_level"`
 	RefID                 uint   `gorm:"column:ref_id;" json:"-"`
+	Type                  int    `gorm:"column:type;default:0;" json:"type"`
+	Password              string `gorm:"column:password;size:200" json:"password"`
+
 }
 
 func (u User) TableName() string {

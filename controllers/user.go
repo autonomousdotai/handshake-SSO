@@ -10,6 +10,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"crypto/md5"
+	"encoding/hex"
 
 	"github.com/bluele/slack"
 	"github.com/gin-gonic/gin"
@@ -210,7 +212,41 @@ func (u UserController) SignUp(c *gin.Context) {
 
 	db := models.Database()
 
-	user := models.User{UUID: UUID, Username: UUID}
+	email := c.DefaultPostForm("email", "")
+	log.Println("email", email)
+
+
+	if (len (email) > 0){
+		userTemp := models.User{}
+		userErr := db.Where("email=?", email).First(&userTemp).Error
+
+		if userErr == nil {
+			resp := JsonResponse{0, "email already exists ", nil}
+			c.JSON(http.StatusOK, resp)
+			return
+		}
+	}
+
+
+
+	password := c.DefaultPostForm("password", "")
+	if (len (password) > 0){
+		hasher := md5.New()
+		hasher.Write([]byte(password))
+		password = hex.EncodeToString(hasher.Sum(nil))
+		log.Println("password", password)
+
+	}
+	name := c.DefaultPostForm("name", "")
+	log.Println("name", name)
+
+	phone := c.DefaultPostForm("phone", "")
+	log.Println("phone", phone)
+
+	userType, _ := strconv.Atoi(c.DefaultPostForm("type", "0"))
+
+
+	user := models.User{UUID: UUID, Username: UUID, Name: name, Email: email, Password: password, Phone: phone, Type: userType}
 	if ref != "" {
 		refUser := models.User{}
 		refErr := db.Where("username = ?", ref).First(&refUser).Error
@@ -232,6 +268,58 @@ func (u UserController) SignUp(c *gin.Context) {
 	go ExchangeSignUp(user.ID, user.RefID)
 
 	resp := JsonResponse{1, "", map[string]interface{}{"passpharse": passpharse}}
+	c.JSON(http.StatusOK, resp)
+	return
+}
+func (u UserController) Login(c *gin.Context) {
+
+	email := c.DefaultPostForm("email", "")
+	log.Println("email", email)
+
+	if (len (email) == 0){
+		resp := JsonResponse{0, "Invalid email", nil}
+		c.JSON(http.StatusOK, resp)
+		return
+	}
+
+	password := c.DefaultPostForm("password", "")
+
+	if (len (password) == 0){
+		resp := JsonResponse{0, "Invalid password", nil}
+		c.JSON(http.StatusOK, resp)
+		return
+	}
+
+	hasher := md5.New()
+	hasher.Write([]byte(password))
+	password = hex.EncodeToString(hasher.Sum(nil))
+	log.Println("password md5", password)
+
+	user := models.User{}
+	db := models.Database()
+	userErr := db.Where("email = ? and password = ?", email, password).First(&user).Error
+
+	if userErr != nil {
+		resp := JsonResponse{0, "Invalid user", nil}
+		c.JSON(http.StatusOK, resp)
+		return
+	}
+
+	config := config.GetConfig()
+	bkey := []byte(config.GetString("secret_key"))
+	uuid := user.UUID
+	passpharse, err := utils.HashEncrypt(bkey, uuid)
+	if err != nil {
+		resp := JsonResponse{0, "Invalid user", nil}
+		c.JSON(http.StatusOK, resp)
+		return
+	}
+
+	log.Println("user Type ", user.Type)
+
+	user.Password = passpharse;
+	user.UUID = "";
+	resp := JsonResponse{1, "", user}
 	c.JSON(http.StatusOK, resp)
 	return
 }
@@ -307,12 +395,29 @@ func (u UserController) UpdateProfile(c *gin.Context) {
 	ft := c.DefaultPostForm("fcm_token", "_")
 	avatar, avatarErr := c.FormFile("avatar")
 
-	log.Println(email, name, username, rwas, phone, ft)
+	password := c.DefaultPostForm("password", "_")
+
+	log.Println(email, name, username, rwas, phone, ft, password)
 
 	oldUsername := userModel.Username
 
+	db := models.Database()
+
 	if email != "_" {
-		userModel.Email = email
+		if (len (email) > 0){
+			userTemp := models.User{}
+			userErr := db.Where("email=? AND id != ?", email, userModel.ID).First(&userTemp).Error
+
+			if userErr == nil {
+				resp := JsonResponse{0, "email already exists ", nil}
+				c.JSON(http.StatusOK, resp)
+				return
+			} else{
+				userModel.Email = email
+			}
+		}
+
+
 	}
 	if username != "_" {
 		userModel.Username = username
@@ -331,6 +436,14 @@ func (u UserController) UpdateProfile(c *gin.Context) {
 	}
 	if ft != "_" {
 		userModel.FCMToken = ft
+	}
+	if password != "_" {
+
+		hasher := md5.New()
+		hasher.Write([]byte(password))
+		password = hex.EncodeToString(hasher.Sum(nil))
+		log.Println("password", password)
+		userModel.Password = password
 	}
 
 	if avatarErr == nil {
@@ -351,7 +464,6 @@ func (u UserController) UpdateProfile(c *gin.Context) {
 		userModel.Avatar = path
 	}
 
-	db := models.Database()
 	dbErr := db.Save(&userModel).Error
 
 	if dbErr != nil {
@@ -842,4 +954,145 @@ func (u UserController) CheckEmailExist(c *gin.Context) {
 	resp := JsonResponse{1, "", map[string]interface{}{"email_existed": 1}}
 	c.JSON(http.StatusOK, resp)
 	c.Abort()
+}
+
+// admin only:
+func (i UserController) List(c *gin.Context) {
+
+	var userModel models.User
+
+	user, _ := c.Get("User")
+	userModel = user.(models.User)
+
+	db := models.Database()
+	var listUser []models.User
+
+
+	if (userModel.Type == 0){
+		resp := JsonResponse{0, "Unable to load list", nil}
+		c.JSON(http.StatusOK, resp)
+		return
+	}
+
+	errDb := db.Where("type>0 and (status=1 or status=2)").Find(&listUser).Error
+
+	if errDb != nil {
+		resp := JsonResponse{0, "Unable to load list", nil}
+		c.JSON(http.StatusOK, resp)
+		return
+	}
+
+	resp := JsonResponse{1, "Success", &listUser}
+	c.JSON(http.StatusOK, resp)
+}
+
+func (u UserController) UpdateUser(c *gin.Context) {
+
+	var userModel models.User
+
+	userLogin, _ := c.Get("User")
+	userModel = userLogin.(models.User)
+
+	if (userModel.Type == 0){
+		resp := JsonResponse{0, "Unable to update user", nil}
+		c.JSON(http.StatusOK, resp)
+		return
+	}
+
+	id, convErr := strconv.Atoi(c.DefaultPostForm("id", "-1"))
+
+	if convErr != nil || id < 0 {
+		resp := JsonResponse{0, "Invalid id", nil}
+		c.JSON(http.StatusOK, resp)
+		return
+	}
+
+	db := models.Database()
+
+	user := models.User{}
+	userErr := db.Where("id=?", id).First(&user).Error
+
+	if userErr != nil {
+		resp := JsonResponse{0, "Invalid user", nil}
+		c.JSON(http.StatusOK, resp)
+		return
+	}
+
+	email := c.DefaultPostForm("email", "_")
+	name := c.DefaultPostForm("name", "_")
+	username := c.DefaultPostForm("username", "_")
+	phone := c.DefaultPostForm("phone", "_")
+	status, _ := strconv.Atoi(c.DefaultPostForm("status", "-1"))
+	userType, _ := strconv.Atoi(c.DefaultPostForm("type", "-1"))
+
+	password := c.DefaultPostForm("password", "_")
+
+	log.Println(email, name, username, phone, password)
+
+	oldUsername := user.Username
+
+
+	if email != "_" {
+		if (len (email) > 0){
+			userTemp := models.User{}
+			userErr := db.Where("email=? AND id != ?", email, user.ID).First(&userTemp).Error
+
+			if userErr == nil {
+				resp := JsonResponse{0, "email already exists ", nil}
+				c.JSON(http.StatusOK, resp)
+				return
+			} else{
+				user.Email = email
+			}
+		}
+
+
+	}
+
+	if username != "_" {
+		user.Username = username
+	}
+	if name != "_" {
+		user.Name = name
+	}
+
+	if phone != "_" {
+		user.Phone = phone
+	}
+	if (userModel.Type == 1){
+		if status > -1 {
+			user.Status = status
+		}
+		if userType > -1 {
+		user.Type = userType
+		}
+	}
+
+
+	if password != "_" {
+		hasher := md5.New()
+		hasher.Write([]byte(password))
+		password = hex.EncodeToString(hasher.Sum(nil))
+		log.Println("password", password)
+		user.Password = password
+	}
+
+	dbErr := db.Save(&user).Error
+
+	if dbErr != nil {
+		log.Println("Error", dbErr.Error())
+		resp := JsonResponse{0, "Update user profile failed.", nil}
+		c.JSON(http.StatusOK, resp)
+		c.Abort()
+		return
+	}
+
+	// implement another logic
+	if oldUsername != userModel.Username {
+		go ExchangeUpdateProfile(user.ID, user.Username)
+	}
+
+	user.UUID = ""
+	resp := JsonResponse{1, "", user}
+	c.JSON(http.StatusOK, resp)
 }
