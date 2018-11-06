@@ -200,6 +200,7 @@ func (s VerifierController) CheckRedeemCodeVerification(c *gin.Context) {
 
 	c.JSON(http.StatusOK, data)
 }
+
 func (s VerifierController) ActiveRedeemCode(c *gin.Context) {
 
 	// 1 check code first:
@@ -285,27 +286,6 @@ func (s VerifierController) ActiveRedeemCode(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, dataExchange)
-
-	//fmt.Println ("active------------------------------------")
-	//endpoint = apiVerifyRedeemCode + "promotion-program-api/redeem-code?promotion_code=%s"
-	//uri = fmt.Sprintf(endpoint, code)
-	//
-	//
-	//request, _ = http.NewRequest("POST", uri, nil)
-	//
-	//client = &http.Client{}
-	//response, err = client.Do(request)
-	//if err != nil {
-	//	fmt.Println(err.Error())
-	//	return
-	//}
-	//
-	//b, _ = ioutil.ReadAll(response.Body)
-	//
-	//var dataActive map[string]interface{}
-	//json.Unmarshal(b, &dataActive)
-	//c.JSON(http.StatusOK, dataActive)
-
 }
 
 const EMAIL_VERIFICATION_TEMPLATE = `<html>
@@ -324,7 +304,8 @@ const EMAIL_VERIFICATION_TEMPLATE = `<html>
 </p>
 <p>
     Ninja.org<br/>
-    Join the conversation at <a href="https://t.me/ninja_org">t.me/ninja_org</a>
+	Join us on Telegram: <a href="https://t.me/ninja_org">t.me/ninja_org</a><br/>
+	Find us on <a href="https://www.facebook.com/ninjadotorg">Facebook</a> | <a href="https://twitter.com/ninjadotorg">Twitter</a>
 </p>
 <p>
 </p>
