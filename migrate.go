@@ -18,4 +18,5 @@ func main() {
 	db.AutoMigrate(&models.Nonce{})
 	db.AutoMigrate(&models.IDVerification{})
 	db.AutoMigrate(&models.Store{})
+	db.AutoMigrate(&models.ActivityLog{})
 }
