@@ -1060,11 +1060,12 @@ func (u UserController) UpdateUser(c *gin.Context) {
 		user.Phone = phone
 	}
 	if (userModel.Type == 1){
+
 		if status > -1 {
 			user.Status = status
 		}
-		if userType > -1 {
-		user.Type = userType
+		if userType > -1 && userType != 1 {
+			user.Type = userType
 		}
 	}
 
