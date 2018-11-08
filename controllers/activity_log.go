@@ -89,6 +89,8 @@ func (i ActivityLogController) List(c *gin.Context) {
 
 	pOrder := c.DefaultQuery("order", defaultOrder)
 
+	log.Println("order", pOrder)
+
 
 	limit, err := strconv.Atoi(limitQuery)
 	if err != nil {
@@ -148,7 +150,7 @@ func (i ActivityLogController) List(c *gin.Context) {
 
 	pPage := int(math.Max(1, float64(page)))
 
-	errDb := db.Offset(limit * (pPage - 1)).Limit(pLimit).Find(&listActivityLog).Error
+	errDb := db.Offset(limit * (pPage - 1)).Limit(pLimit).Order("id " + pOrder).Find(&listActivityLog).Error
 	if errDb != nil {
 		resp := JsonResponse{0, "Unable to load list", nil}
 		c.JSON(http.StatusOK, resp)

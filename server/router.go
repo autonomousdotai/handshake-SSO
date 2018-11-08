@@ -83,6 +83,10 @@ func NewRouter() *gin.Engine {
 		// admin:
 		adminGroup.GET("/user/list", middlewares.AdminAuthMiddleware(), userController.List)
 		adminGroup.POST("/user/update", middlewares.AdminAuthMiddleware(), userController.UpdateUser)
+
+		activityLogController := new(controllers.ActivityLogController)
+		adminGroup.GET("/acivity-log/list", activityLogController.List)
+
 	}
 
 	storeController := new(controllers.StoreController)
@@ -94,11 +98,7 @@ func NewRouter() *gin.Engine {
 		storeGroup.POST("/update", middlewares.AuthMiddleware(), storeController.UpdateStore)
 	}
 
-	activityLogController := new(controllers.ActivityLogController)
-	activityLogGroup := router.Group("acivity-log")
-	{
-		activityLogGroup.GET("/list", activityLogController.List)
-	}
+
 
 	handshakeController := new(controllers.HandshakeController)
 	handshakeGroup := router.Group("handshake")
