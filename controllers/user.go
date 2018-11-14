@@ -271,58 +271,6 @@ func (u UserController) SignUp(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 	return
 }
-func (u UserController) Login(c *gin.Context) {
-
-	email := c.DefaultPostForm("email", "")
-	log.Println("email", email)
-
-	if (len (email) == 0){
-		resp := JsonResponse{0, "Invalid email", nil}
-		c.JSON(http.StatusOK, resp)
-		return
-	}
-
-	password := c.DefaultPostForm("password", "")
-
-	if (len (password) == 0){
-		resp := JsonResponse{0, "Invalid password", nil}
-		c.JSON(http.StatusOK, resp)
-		return
-	}
-
-	hasher := md5.New()
-	hasher.Write([]byte(password))
-	password = hex.EncodeToString(hasher.Sum(nil))
-	log.Println("password md5", password)
-
-	user := models.User{}
-	db := models.Database()
-	userErr := db.Where("email = ? and password = ?", email, password).First(&user).Error
-
-	if userErr != nil {
-		resp := JsonResponse{0, "Invalid user", nil}
-		c.JSON(http.StatusOK, resp)
-		return
-	}
-
-	config := config.GetConfig()
-	bkey := []byte(config.GetString("secret_key"))
-	uuid := user.UUID
-	passpharse, err := utils.HashEncrypt(bkey, uuid)
-	if err != nil {
-		resp := JsonResponse{0, "Invalid user", nil}
-		c.JSON(http.StatusOK, resp)
-		return
-	}
-
-	log.Println("user Type ", user.Type)
-
-	user.Password = passpharse;
-	user.UUID = "";
-	resp := JsonResponse{1, "", user}
-	c.JSON(http.StatusOK, resp)
-	return
-}
 
 func (u UserController) Profile(c *gin.Context) {
 	var userModel models.User

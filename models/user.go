@@ -26,7 +26,6 @@ type User struct {
 	RefID                 uint   `gorm:"column:ref_id;" json:"-"`
 	Type                  int    `gorm:"column:type;default:0;" json:"type"`
 	Password              string `gorm:"column:password;size:200" json:"password"`
-
 }
 
 func (u User) TableName() string {
