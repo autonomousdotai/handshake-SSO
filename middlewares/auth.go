@@ -59,7 +59,7 @@ func AuthMiddleware() gin.HandlerFunc {
 	}
 }
 
-func AdminAuthMiddleware1() gin.HandlerFunc {
+func AdminAuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		conf := config.GetConfig()
 		adminHash := conf.GetString("admin_hash")
@@ -72,7 +72,7 @@ func AdminAuthMiddleware1() gin.HandlerFunc {
 		c.Next()
 	}
 }
-func AdminAuthMiddleware() gin.HandlerFunc {
+func AdminAuthMiddleware1() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		conf := config.GetConfig()
 		if !isWhiteEndpoint(conf, c.Request.URL.Path) {
