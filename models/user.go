@@ -37,6 +37,6 @@ var hookService = new(services.HookService)
 // AfterUpdate :
 func (u *User) AfterUpdate() {
 	if len(u.Email) > 0 {
-		go hookService.UserModelHooks("Update", u.ID, u.Metadata, u.Email)
+		go hookService.UserModelHooks("Update", u.ID, u.Metadata, u.Email, u.Username, u.Name)
 	}
 }
