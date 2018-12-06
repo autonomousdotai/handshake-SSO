@@ -52,9 +52,10 @@ func NewRouter() *gin.Engine {
 	userGroup := router.Group("user")
 	{
 		userGroup.GET("/profile", middlewares.AuthMiddleware(), userController.Profile)
+		userGroup.POST("/profile", middlewares.AuthMiddleware(), userController.UpdateProfile)
+
 		userGroup.GET("/username-exist", middlewares.AuthMiddleware(), userController.UsernameExist)
 		userGroup.GET("/username/:id", userController.Username)
-		userGroup.POST("/profile", middlewares.AuthMiddleware(), userController.UpdateProfile)
 
 		userGroup.POST("/sign-up", userController.SignUp)
 		userGroup.POST("/free-rinkeby-eth", middlewares.AuthMiddleware(), userController.FreeRinkebyEther)
@@ -69,8 +70,6 @@ func NewRouter() *gin.Engine {
 		userGroup.POST("/verification/phone/check", middlewares.AuthMiddleware(), verificationController.CheckPhoneVerification)
 		userGroup.POST("/verification/email/start", middlewares.AuthMiddleware(), verificationController.SendEmailVerification)
 		userGroup.POST("/verification/email/check", middlewares.AuthMiddleware(), verificationController.CheckEmailVerification)
-		userGroup.POST("/verification/redeem-code/check", middlewares.AuthMiddleware(), verificationController.CheckRedeemCodeVerification)
-		userGroup.POST("/verification/redeem-code/redeem", middlewares.AuthMiddleware(), verificationController.ActiveRedeemCode)
 
 	}
 

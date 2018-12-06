@@ -1,16 +1,13 @@
 package controllers
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/ninjadotorg/handshake-dispatcher/config"
 	"github.com/ninjadotorg/handshake-dispatcher/models"
 	"github.com/ninjadotorg/handshake-dispatcher/services"
 	"github.com/ninjadotorg/handshake-dispatcher/utils"
@@ -173,119 +170,6 @@ func (s VerifierController) CheckEmailVerification(c *gin.Context) {
 
 	resp := JsonResponse{1, "", nil}
 	c.JSON(http.StatusOK, resp)
-}
-
-func (s VerifierController) CheckRedeemCodeVerification(c *gin.Context) {
-	code := c.DefaultQuery("code", "")
-
-	conf := config.GetConfig()
-	apiVerifyRedeemCode := conf.GetString("autonomous_api")
-
-	endpoint := apiVerifyRedeemCode + "promotion-program-api/verify-promotion-code?promotion_code=%s"
-	uri := fmt.Sprintf(endpoint, code)
-
-	request, _ := http.NewRequest("POST", uri, nil)
-
-	client := &http.Client{}
-	response, err := client.Do(request)
-	if err != nil {
-		fmt.Println(err.Error())
-		return
-	}
-
-	b, _ := ioutil.ReadAll(response.Body)
-
-	var data map[string]interface{}
-	json.Unmarshal(b, &data)
-
-	c.JSON(http.StatusOK, data)
-}
-
-func (s VerifierController) ActiveRedeemCode(c *gin.Context) {
-
-	// 1 check code first:
-
-	code := c.DefaultQuery("code", "")
-
-	conf := config.GetConfig()
-	apiVerifyRedeemCode := conf.GetString("autonomous_api")
-
-	endpoint := apiVerifyRedeemCode + "promotion-program-api/verify-promotion-code?promotion_code=%s"
-	uri := fmt.Sprintf(endpoint, code)
-
-	request, _ := http.NewRequest("POST", uri, nil)
-
-	client := &http.Client{}
-	response, err := client.Do(request)
-	if err != nil {
-		fmt.Println(err.Error())
-		return
-	}
-
-	b, _ := ioutil.ReadAll(response.Body)
-
-	var data map[string]interface{}
-	json.Unmarshal(b, &data)
-
-	if data["status"].(float64) != 1 {
-		c.JSON(http.StatusOK, data)
-		return
-	}
-
-	fmt.Println("active + transfer ========================")
-
-	toAddress := c.DefaultQuery("to-address", "")
-
-	fiatAmountValue := ((data["data"].(map[string]interface{}))["amount"]).(float64)
-	currency := c.DefaultQuery("currency", "")
-
-	log.Println("fiatAmountValue", fiatAmountValue)
-
-	if toAddress == "" {
-		resp := JsonResponse{0, "to-address invalid", nil}
-		c.JSON(http.StatusOK, resp)
-		return
-	}
-	if currency == "" {
-		resp := JsonResponse{0, "currency invalid", nil}
-		c.JSON(http.StatusOK, resp)
-		return
-	}
-
-	fmt.Println("transfer----------------------------------")
-	exchangeAPI, found := utils.GetForwardingEndpoint("exchange")
-	log.Println(exchangeAPI, found)
-
-	endpoint = exchangeAPI + "/internal/redeem"
-
-	jsonData := make(map[string]interface{})
-	jsonData["address"] = toAddress
-	jsonData["fiat_amount"] = fiatAmountValue
-	jsonData["currency"] = currency
-	jsonData["ref_data"] = "wallet-giftcard-redeem"
-	jsonValue, _ := json.Marshal(jsonData)
-
-	request, _ = http.NewRequest("POST", endpoint, bytes.NewBuffer(jsonValue))
-
-	client = &http.Client{}
-	response, err = client.Do(request)
-	if err != nil {
-		fmt.Println(err.Error())
-		return
-	}
-
-	b, _ = ioutil.ReadAll(response.Body)
-
-	var dataExchange map[string]interface{}
-	json.Unmarshal(b, &dataExchange)
-
-	log.Println("dataExchange=>", dataExchange)
-
-	if dataExchange["status"].(float64) != 1 {
-		c.JSON(http.StatusOK, dataExchange)
-		return
-	}
-	c.JSON(http.StatusOK, dataExchange)
 }
 
 const EMAIL_VERIFICATION_TEMPLATE = `<html>
