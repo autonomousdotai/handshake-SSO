@@ -14,9 +14,10 @@ import (
 type HookService struct{}
 
 // UserModelHooks :
-func (s HookService) UserModelHooks(typeChange string, userID uint, metaData string, email string) {
+func (s HookService) UserModelHooks(typeChange string, userID uint, metaData string, email string, name string) {
 	jsonData := make(map[string]interface{})
 	jsonData["user_id"] = userID
+	jsonData["name"] = name
 	jsonData["email"] = email
 	jsonData["meta_data"] = metaData
 	jsonData["type_change"] = typeChange
