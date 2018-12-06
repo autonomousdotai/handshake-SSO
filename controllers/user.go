@@ -7,196 +7,20 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"math/rand"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/bluele/slack"
 	"github.com/gin-gonic/gin"
 
 	"github.com/ninjadotorg/handshake-dispatcher/config"
 	"github.com/ninjadotorg/handshake-dispatcher/daos"
 	"github.com/ninjadotorg/handshake-dispatcher/models"
-	"github.com/ninjadotorg/handshake-dispatcher/services"
 	"github.com/ninjadotorg/handshake-dispatcher/utils"
 )
 
 type UserController struct{}
-
-func (u UserController) UploadIDVerfication(c *gin.Context) {
-	var userModel models.User
-
-	documentTypesInStr := [3]string{"passport", "driver_license", "id_card"}
-	uploadImageFolder := "id_verification"
-
-	user, _ := c.Get("User")
-	userModel = user.(models.User)
-	currentVerificationLevel := userModel.IDVerificationLevel
-	fileNameTemplate := fmt.Sprintf("%s/id_verification_%s_u%d-%s_%s_%s_%d.%s", uploadImageFolder, "%s", userModel.ID, userModel.Username, "%s", time.Now().Format("20060102150405"), rand.Int(), "%s")
-
-	db := models.Database()
-	var existsIDVerification models.IDVerification
-	existsIDVerificationErr := db.Where("user_id = ?", userModel.ID).First(&existsIDVerification).Error
-	mailClient := services.MailService{}
-	conf := config.GetConfig()
-	mailTo := conf.GetString("id_verification_admin_email")
-
-	if currentVerificationLevel == 0 {
-		userFullName := c.DefaultPostForm("full_name", "")
-		idNumber := c.DefaultPostForm("id_number", "")
-		// document type: 0:passport, 1:driver license, 2:id card
-		documentType, convertErr := strconv.Atoi(c.DefaultPostForm("document_type", "-1"))
-		email := c.DefaultPostForm("email", "")
-		frontImage, frontImageErr := c.FormFile("front_image")
-		backImage, backImageErr := c.FormFile("back_image")
-
-		var backImageUploadStatus bool
-
-		frontImageExt := ""
-		backImageExt := ""
-		backImageFilename := ""
-		fileNameTemplate = fmt.Sprintf(fileNameTemplate, documentTypesInStr[documentType], "%s", "%s")
-
-		if convertErr != nil || 0 > documentType || documentType > 2 {
-			resp := JsonResponse{0, "Invalid document type", nil}
-			c.JSON(http.StatusOK, resp)
-			return
-		}
-
-		if len(userFullName) < 1 {
-			resp := JsonResponse{0, "Please enter your full name", nil}
-			c.JSON(http.StatusOK, resp)
-			return
-		}
-
-		if len(idNumber) < 1 {
-			resp := JsonResponse{0, "Please enter your document number", nil}
-			c.JSON(http.StatusOK, resp)
-			return
-		}
-
-		if frontImageErr != nil || !utils.ValidateImage(frontImage.Filename, frontImage.Header.Get("Content-Type")) {
-			resp := JsonResponse{0, "Unsupported front image file", nil}
-			c.JSON(http.StatusOK, resp)
-			return
-		}
-
-		frontImageExt = strings.Split(frontImage.Filename, ".")[1]
-		frontImageFilename := fmt.Sprintf(fileNameTemplate, "front", frontImageExt)
-
-		if documentType != 0 && (backImageErr != nil || !utils.ValidateImage(backImage.Filename, backImage.Header.Get("Content-Type"))) {
-			resp := JsonResponse{0, "Unsupported back image file", nil}
-			c.JSON(http.StatusOK, resp)
-			return
-		}
-
-		if documentType != 0 {
-			backImageExt = strings.Split(backImage.Filename, ".")[1]
-			backImageFilename = fmt.Sprintf(fileNameTemplate, "back", backImageExt)
-		}
-
-		frontImageUploadStatus, _ := uploadService.Upload(frontImageFilename, frontImage)
-		if documentType != 0 {
-			backImageUploadStatus, _ = uploadService.Upload(backImageFilename, backImage)
-		}
-
-		if !frontImageUploadStatus || (documentType != 0 && !backImageUploadStatus) {
-			resp := JsonResponse{0, "Unable to upload your documents", nil}
-			c.JSON(http.StatusOK, resp)
-			return
-		}
-
-		if existsIDVerificationErr != nil {
-			idVerificationModel := models.IDVerification{UserID: userModel.ID, IDType: documentType, Name: userFullName, IDNumber: idNumber, FrontImage: frontImageFilename, BackImage: backImageFilename, SelfieImage: "", Email: email}
-			errDb := db.Create(&idVerificationModel).Error
-
-			if errDb != nil {
-				resp := JsonResponse{0, "Unable to upload your documents", nil}
-				c.JSON(http.StatusOK, resp)
-				return
-			}
-		} else if existsIDVerification.Status == -1 {
-			existsIDVerification.IDType = documentType
-			existsIDVerification.Name = userFullName
-			existsIDVerification.IDNumber = idNumber
-			existsIDVerification.FrontImage = frontImageFilename
-			existsIDVerification.BackImage = backImageFilename
-			existsIDVerification.Email = email
-			existsIDVerification.SelfieImage = ""
-			existsIDVerification.Status = 0
-			errDb := db.Save(&existsIDVerification).Error
-
-			if errDb != nil {
-				resp := JsonResponse{0, "Unable to upload your documents", nil}
-				c.JSON(http.StatusOK, resp)
-				return
-			}
-		}
-	} else if currentVerificationLevel == 1 {
-		if existsIDVerificationErr != nil {
-			resp := JsonResponse{-1, "There was some wrong while uploading your document. Please contact administrator for more details", nil}
-			c.JSON(http.StatusOK, resp)
-			return
-		}
-
-		documentType := existsIDVerification.IDType
-
-		selfieImage, selfieImageErr := c.FormFile("selfie_image")
-		selfieImageExt := ""
-		fileNameTemplate = fmt.Sprintf(fileNameTemplate, documentTypesInStr[documentType], "%s", "%s")
-
-		if selfieImageErr != nil || !utils.ValidateImage(selfieImage.Filename, selfieImage.Header.Get("Content-Type")) {
-			resp := JsonResponse{0, "Unsupported selfie image file", nil}
-			c.JSON(http.StatusOK, resp)
-			return
-		}
-
-		selfieImageExt = strings.Split(selfieImage.Filename, ".")[1]
-		selfieImageFilename := fmt.Sprintf(fileNameTemplate, "selfie", selfieImageExt)
-		selfieImageUploadStatus, _ := uploadService.Upload(selfieImageFilename, selfieImage)
-
-		if !selfieImageUploadStatus {
-			resp := JsonResponse{0, "Unable to upload your documents", nil}
-			c.JSON(http.StatusOK, resp)
-			return
-		}
-
-		existsIDVerification.SelfieImage = selfieImageFilename
-		existsIDVerification.Status = 0
-		errDb := db.Save(&existsIDVerification).Error
-
-		if errDb != nil {
-			resp := JsonResponse{0, "Unable to upload your documents", nil}
-			c.JSON(http.StatusOK, resp)
-			return
-		}
-	} else {
-		resp := JsonResponse{1, "Your account has been fully verified", nil}
-		c.JSON(http.StatusOK, resp)
-		return
-	}
-
-	userModel.IDVerified = 2
-	errDb := db.Save(&userModel).Error
-
-	if errDb != nil {
-		resp := JsonResponse{0, "Unable to upload your documents", nil}
-		c.JSON(http.StatusOK, resp)
-		return
-	}
-
-	subject := fmt.Sprintf("[VERIFY] Please approve this account UserId: %d - Upgrading Level: %d", userModel.ID, currentVerificationLevel+1)
-	content := fmt.Sprintf("Verify Link: %s/admin/id-verification?uid=%d", conf.GetString("working_domain"), userModel.ID)
-	mailClient.Send("dojo@ninja.org", mailTo, subject, content)
-
-	slackClient := slack.New(conf.GetString("slack_token"))
-	slackClient.ChatPostMessage("exchange-notification", subject, nil)
-
-	resp := JsonResponse{1, "", nil}
-	c.JSON(http.StatusOK, resp)
-}
 
 func (u UserController) SignUp(c *gin.Context) {
 	config := config.GetConfig()
@@ -487,146 +311,6 @@ func (u UserController) FreeRinkebyEther(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
-func (u UserController) CompleteProfile(c *gin.Context) {
-	var status bool
-	var message string
-	var user models.User
-
-	userModel, _ := c.Get("User")
-	user = userModel.(models.User)
-
-	conf := config.GetConfig()
-
-	env := conf.GetString("env")
-	network := "rinkeby"
-	if env == "prod" {
-		network = "mainnet"
-	}
-
-	log.Println("Start after update profile", user.ID)
-
-	status = false
-	// valid user
-	if user.Email != "" {
-		var md map[string]interface{}
-		if user.Metadata != "" {
-			json.Unmarshal([]byte(user.Metadata), &md)
-		} else {
-			md = map[string]interface{}{}
-		}
-
-		completeProfile, ok := md["complete-profile"]
-		// not received token.
-		if !ok {
-			log.Println("Yay, User don't receive token yet")
-			var wallets map[string]interface{}
-			if user.RewardWalletAddresses != "" {
-				log.Println("Yay, User have reward wallet address", user.RewardWalletAddresses)
-				json.Unmarshal([]byte(user.RewardWalletAddresses), &wallets)
-
-				ethWallet, hasEthWallet := wallets["ETH"]
-
-				if hasEthWallet {
-					log.Println("Yay, User has eth wallet.")
-					amount := "80"
-					fmt.Println("WTF 11")
-					address := ((ethWallet.(map[string]interface{}))["address"]).(string)
-					fmt.Println("WTF 1")
-					tokenStatus, hash := ethereumService.FreeToken(fmt.Sprint(user.ID), address, amount, network)
-					log.Println("Receive token result", tokenStatus, hash)
-					if tokenStatus {
-						md["complete-profile"] = map[string]interface{}{
-							"address": address,
-							"amount":  amount,
-							"hash":    hash,
-							"time":    time.Now().UTC().Unix(),
-						}
-
-						metadata, _ := json.Marshal(md)
-						user.Metadata = string(metadata)
-						dbErr := models.Database().Save(&user).Error
-						if dbErr != nil {
-							log.Println(dbErr.Error())
-							message = fmt.Sprintf("Complete Profile Token fail: %s", hash)
-						} else {
-							status = true
-							message = fmt.Sprintf("Your complete profile token transaction is %s", hash)
-
-							go mailService.SendCompleteProfile(user.Email, user.Username, hash)
-
-							if user.RefID != 0 {
-								log.Println("This user has referrer", user.RefID)
-								go FreeTokenReferrer(fmt.Sprint(user.ID), fmt.Sprint(user.RefID), network)
-							}
-						}
-					} else {
-						message = fmt.Sprintf("Complete Profile Token fail: %s", hash)
-					}
-				} else {
-					message = "User does not have ETH reward wallet"
-				}
-			} else {
-				message = "User is not updated reward wallet addresses"
-			}
-		} else {
-			message = fmt.Sprintf("Your complete profile token transaction is %s", completeProfile.(map[string]interface{})["hash"])
-		}
-	} else {
-		message = "User is not complete profile yet"
-	}
-
-	resp := JsonResponse{1, message, status}
-	c.JSON(http.StatusOK, resp)
-}
-
-func (u UserController) Referred(c *gin.Context) {
-	var user models.User
-
-	userModel, _ := c.Get("User")
-	user = userModel.(models.User)
-
-	var md map[string]interface{}
-	if user.Metadata != "" {
-		json.Unmarshal([]byte(user.Metadata), &md)
-	} else {
-		md = map[string]interface{}{}
-	}
-
-	referral_total := 0
-	referral_amount := 0
-	firstbet_total := 0
-	firstbet_amount := 0
-
-	referrals, hasReferrals := md["referrals"]
-
-	if hasReferrals {
-		for key, _ := range referrals.(map[string]interface{}) {
-			if strings.HasPrefix(key, "bonus") {
-				referral_total += 1
-				referral_amount += 20
-			}
-			if strings.HasPrefix(key, "firstbet") {
-				firstbet_total += 1
-				firstbet_total += 20
-			}
-		}
-	}
-
-	data := map[string]interface{}{
-		"referral": map[string]interface{}{
-			"total":  referral_total,
-			"amount": referral_amount,
-		},
-		"firstbet": map[string]interface{}{
-			"total":  firstbet_total,
-			"amount": firstbet_amount,
-		},
-	}
-
-	resp := JsonResponse{1, "", data}
-	c.JSON(http.StatusOK, resp)
-}
-
 // Subscribe : collect user email
 func (u UserController) Subscribe(c *gin.Context) {
 	var userModel models.SubscribedUser
@@ -668,14 +352,8 @@ func (u UserController) Subscribe(c *gin.Context) {
 	resp := JsonResponse{1, "", userModel}
 
 	switch product {
-	case "cash":
-		go mailService.SendCashEmail(email)
 	case "prediction":
 		go mailService.SendPredictionEmail(email)
-	case "wallet":
-		go mailService.SendWalletEmail(email)
-	case "whisper":
-		go mailService.SendWhisperEmail(email)
 	case "chrome_extension":
 		go mailService.SendChromeExtensionEmail(email)
 	}

@@ -5,7 +5,6 @@ twilio_key: xxx
 email_verification_url: http://handshake.ninja/email-verification
 forwarding:
     cryptosign: http://localhost:8081
-    exchange: http://localhost:8082
     betting: http://localhost:8083
     marketplace: http://localhost:8084
 services:

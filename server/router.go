@@ -55,13 +55,10 @@ func NewRouter() *gin.Engine {
 		userGroup.GET("/username-exist", middlewares.AuthMiddleware(), userController.UsernameExist)
 		userGroup.GET("/username/:id", userController.Username)
 		userGroup.POST("/profile", middlewares.AuthMiddleware(), userController.UpdateProfile)
-		userGroup.POST("/id_verification", middlewares.AuthMiddleware(), userController.UploadIDVerfication)
 
 		userGroup.POST("/sign-up", userController.SignUp)
 		userGroup.POST("/free-rinkeby-eth", middlewares.AuthMiddleware(), userController.FreeRinkebyEther)
 
-		userGroup.GET("/referred", middlewares.AuthMiddleware(), userController.Referred)
-		userGroup.POST("/complete-profile", middlewares.AuthMiddleware(), userController.CompleteProfile)
 		userGroup.POST("/subscribe", userController.Subscribe)
 		userGroup.POST("/count_subscribed_user", userController.CountSubscribedUsers)
 
@@ -75,15 +72,6 @@ func NewRouter() *gin.Engine {
 		userGroup.POST("/verification/redeem-code/check", middlewares.AuthMiddleware(), verificationController.CheckRedeemCodeVerification)
 		userGroup.POST("/verification/redeem-code/redeem", middlewares.AuthMiddleware(), verificationController.ActiveRedeemCode)
 
-	}
-
-	storeController := new(controllers.StoreController)
-	storeGroup := router.Group("store")
-	{
-		storeGroup.POST("/create", middlewares.AuthMiddleware(), storeController.Create)
-		storeGroup.GET("/list", middlewares.AuthMiddleware(), storeController.List)
-		storeGroup.GET("/detail", middlewares.AuthMiddleware(), storeController.Detail)
-		storeGroup.POST("/update", middlewares.AuthMiddleware(), storeController.UpdateStore)
 	}
 
 	handshakeController := new(controllers.HandshakeController)
@@ -101,14 +89,6 @@ func NewRouter() *gin.Engine {
 	{
 		systemGroup.GET("/user/:id", systemController.User)
 		systemGroup.POST("/betsuccess/:id", systemController.BetSuccess)
-	}
-
-	idVerificationController := new(controllers.IDVerification)
-	idVerificationGroup := router.Group("id_verification")
-	{
-		idVerificationGroup.GET("/list", middlewares.AdminAuthMiddleware(), idVerificationController.List)
-		idVerificationGroup.POST("/update", middlewares.AdminAuthMiddleware(), idVerificationController.UpdateStatus)
-		idVerificationGroup.GET("/get", middlewares.AuthMiddleware(), idVerificationController.Get)
 	}
 
 	conf := config.GetConfig()

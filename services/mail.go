@@ -134,20 +134,6 @@ func (s MailService) SendFreeBet(email string, username string, hash string) {
 	log.Println("Send mail FreeBet status", status, err)
 }
 
-func (s MailService) SendCashEmail(email string) {
-	endpoint := "www.ninja.org/cash"
-
-	subject := `Your mobile link for Ninja Cash`
-	body := fmt.Sprintf(`Hey Ninja!,<br/><br/>
-        Cash is mobile only. No downloads, no sign ups! To start trading, simply <a href="%s">click here on your phone</a>
-        or enter this link into your mobile browser: <a href="%s">%s</a> <br/><br/>
-        See you there!<br/>
-        Team Ninja`, endpoint, endpoint, endpoint)
-
-	status, err := s.Send("dojo@ninja.org", email, subject, body)
-	log.Println("Send cash mail status", status, err)
-}
-
 func (s MailService) SendPredictionEmail(email string) {
 	endpoint := "www.ninja.org/prediction"
 
@@ -159,32 +145,6 @@ func (s MailService) SendPredictionEmail(email string) {
 
 	status, err := s.Send("dojo@ninja.org", email, subject, body)
 	log.Println("Send prediction mail status", status, err)
-}
-
-func (s MailService) SendWalletEmail(email string) {
-	endpoint := "www.ninja.org/wallet"
-
-	subject := `Your mobile link for Ninja Wallet`
-	body := fmt.Sprintf(`Hey Ninja!,<br/><br/>
-	    Wallet is mobile web only. No downloads, no sign ups! To check out your Ninja Wallet, simply <a href="%s">click here on your phone</a> 
-	    or enter this link into your mobile browser: <a href="%s">%s</a> <br/><br/>
-	    See you there!<br/>Team Ninja`, endpoint, endpoint, endpoint)
-
-	status, err := s.Send("dojo@ninja.org", email, subject, body)
-	log.Println("Send wallet mail status", status, err)
-}
-
-func (s MailService) SendWhisperEmail(email string) {
-	endpoint := "www.ninja.org/whisper"
-
-	subject := `Your mobile link for Whisper`
-	body := fmt.Sprintf(`Hey Ninja!,<br/><br/>
-	    Whisper is mobile web only. No downloads, no sign ups! To get chatting, just <a href="%s">click here on your phone</a> 
-		or enter this link into your mobile browser: <a href="%s">%s</a> <br/><br/>
-	    Speak soon,<br/>Team Ninja`, endpoint, endpoint, endpoint)
-
-	status, err := s.Send("dojo@ninja.org", email, subject, body)
-	log.Println("Send whisper mail status", status, err)
 }
 
 // SendChromeExtensionEmail : send email for user who subcribe chrome extension product
