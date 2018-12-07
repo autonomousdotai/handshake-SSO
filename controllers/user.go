@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"bytes"
 	"crypto/md5"
 	"encoding/hex"
 	"encoding/json"
@@ -84,9 +83,6 @@ func (u UserController) SignUp(c *gin.Context) {
 		return
 	}
 
-	// implement another logic
-	go ExchangeSignUp(user.ID, user.RefID)
-
 	resp := JsonResponse{1, "", map[string]interface{}{"passpharse": passpharse}}
 	c.JSON(http.StatusOK, resp)
 	return
@@ -167,8 +163,6 @@ func (u UserController) UpdateProfile(c *gin.Context) {
 
 	log.Println(email, name, username, rwas, phone, ft, password)
 
-	oldUsername := userModel.Username
-
 	db := models.Database()
 
 	if email != "_" {
@@ -239,11 +233,6 @@ func (u UserController) UpdateProfile(c *gin.Context) {
 		c.JSON(http.StatusOK, resp)
 		c.Abort()
 		return
-	}
-
-	// implement another logic
-	if oldUsername != userModel.Username {
-		go ExchangeUpdateProfile(userModel.ID, userModel.Username)
 	}
 
 	userModel.UUID = ""
@@ -444,51 +433,6 @@ func (u UserController) Notification(c *gin.Context) {
 
 	resp := JsonResponse{1, "", nil}
 	c.JSON(http.StatusOK, resp)
-}
-
-func ExchangeSignUp(userId uint, refId uint) {
-	jsonData := make(map[string]interface{})
-	jsonData["id"] = userId
-	jsonData["refId"] = refId
-
-	endpoint, found := utils.GetForwardingEndpoint("exchange")
-	log.Println(endpoint, found)
-	jsonValue, _ := json.Marshal(jsonData)
-
-	endpoint = fmt.Sprintf("%s/%s", endpoint, "user/profile")
-
-	request, _ := http.NewRequest("POST", endpoint, bytes.NewBuffer(jsonValue))
-	request.Header.Set("Content-Type", "application/json")
-
-	client := &http.Client{}
-	_, err := client.Do(request)
-	if err != nil {
-		log.Println("call exchange failed ", err)
-	} else {
-		log.Println("call exchange on SignUp success")
-	}
-}
-
-func ExchangeUpdateProfile(userId uint, username string) {
-	jsonData := make(map[string]interface{})
-	jsonData["id"] = userId
-
-	endpoint, found := utils.GetForwardingEndpoint("exchange")
-	log.Println(endpoint, found)
-	jsonValue, _ := json.Marshal(jsonData)
-
-	endpoint = fmt.Sprintf("%s/%s?alias=%s", endpoint, "user/profile", username)
-
-	request, _ := http.NewRequest("PUT", endpoint, bytes.NewBuffer(jsonValue))
-	request.Header.Set("Content-Type", "application/json")
-
-	client := &http.Client{}
-	_, err := client.Do(request)
-	if err != nil {
-		log.Println("call exchange failed ", err)
-	} else {
-		log.Println("call exchange on SignUp success")
-	}
 }
 
 // FreeTokenReferrer :
