@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 
@@ -63,9 +62,7 @@ func (u UserController) SignUp(c *gin.Context) {
 	phone := c.DefaultPostForm("phone", "")
 	log.Println("phone", phone)
 
-	userType, _ := strconv.Atoi(c.DefaultPostForm("type", "0"))
-
-	user := models.User{UUID: UUID, Username: UUID, Name: name, Email: email, Password: password, Phone: phone, Type: userType}
+	user := models.User{UUID: UUID, Username: UUID, Name: name, Email: email, Password: password, Phone: phone}
 	if ref != "" {
 		refUser := models.User{}
 		refErr := db.Where("username = ?", ref).First(&refUser).Error
