@@ -160,6 +160,13 @@ func (u UserController) UpdateProfile(c *gin.Context) {
 
 	log.Println(email, name, username, rwas, phone, ft, password)
 
+	if (userModel.WalletAddresses == "" || userModel.WalletAddresses == "_") && (was == "" || was == "_") {
+		resp := JsonResponse{0, "Invalid address", nil}
+		c.JSON(http.StatusOK, resp)
+		c.Abort()
+		return
+	}
+
 	db := models.Database()
 
 	if email != "_" {
@@ -186,7 +193,7 @@ func (u UserController) UpdateProfile(c *gin.Context) {
 	if rwas != "_" {
 		userModel.RewardWalletAddresses = rwas
 	}
-	if was != "_" {
+	if was != "_" && was != "" {
 		userModel.WalletAddresses = was
 	}
 	if phone != "_" {
